@@ -1,0 +1,292 @@
+{
+  "AvailableActions": [
+    "Kommen",
+    "Gehen",
+    "Dienstgang Beginn",
+    "Dienstgang (Ende außerhalb)",
+    "Mob. Arbeiten Beginn",
+    "Mob. Arbeiten Ende",
+    "Fortbildung Beginn",
+    "Fortbildung Ende"
+  ],
+  "TimeFieldLabels": {
+    "Arbeitsbeginn": "Arbeitsbeginn",
+    "PauseBeginn": "Beginn Mittagspause",
+    "PauseEnde": "Ende Mittagspause",
+    "DienstgangStart": "Start Dienstgang",
+    "DienstgangEnde": "Ende Dienstgang / Ankunft",
+    "Arbeitsende": "Arbeitsende",
+    "FortbildungBeginn": "Fortbildung Beginn",
+    "FortbildungEnde": "Fortbildung Ende",
+    "FahrtBeginnHin": "Fahrtbeginn Wohnort (Hin)",
+    "AnkunftOrt": "Ankunft am Ort",
+    "FahrtBeginnRueck": "Fahrtbeginn Ort (Rück)",
+    "AnkunftWohnort": "Ankunft Wohnort"
+  },
+  "Procedures": [
+    {
+      "Id": "1",
+      "Name": "Arbeitstag Dienststätte mit Pause",
+      "Description": "Standardarbeitstag in der Dienststätte mit Mittagspause",
+      "Category": "Dienststätte",
+      "Conditions": {
+        "OrtBeginn": "Dienststätte",
+        "Pause": "Ja",
+        "Dienstgang": "Nein",
+        "OrtEnde": "Dienststätte"
+      },
+      "RequiredTimeFields": ["Arbeitsbeginn", "PauseBeginn", "PauseEnde", "Arbeitsende"],
+      "Steps": [
+        { "Action": "Kommen", "TimeKey": "Arbeitsbeginn" },
+        { "Action": "Gehen", "TimeKey": "PauseBeginn" },
+        { "Action": "Kommen", "TimeKey": "PauseEnde" },
+        { "Action": "Gehen", "TimeKey": "Arbeitsende" }
+      ]
+    },
+    {
+      "Id": "2",
+      "Name": "Dienststätte + Pause + Dienstgang (gleicher Ort, Rückkehr)",
+      "Description": "Halbtags-Schulung am selben Ort wie Dienststätte (z.B. KVHS), Rückkehr und Weiterarbeit",
+      "Category": "Dienststätte",
+      "Conditions": {
+        "OrtBeginn": "Dienststätte",
+        "Pause": "Ja",
+        "Dienstgang": "Ja",
+        "DienstgangOrt": "Gleicher Ort",
+        "DienstgangEndeTyp": "Rückkehr"
+      },
+      "RequiredTimeFields": ["Arbeitsbeginn", "DienstgangStart", "PauseBeginn", "PauseEnde", "DienstgangEnde", "Arbeitsende"],
+      "Steps": [
+        { "Action": "Kommen", "TimeKey": "Arbeitsbeginn" },
+        { "Action": "Dienstgang Beginn", "TimeKey": "DienstgangStart" },
+        { "Action": "Gehen", "TimeKey": "PauseBeginn", "Comment": "Pause beginnt und endet am Standort der Schulung. → ggf. Korrektur über Bewegungsantrag" },
+        { "Action": "Kommen", "TimeKey": "PauseEnde" },
+        { "Action": "Dienstgang Beginn", "TimeKey": "PauseEnde", "Comment": "Direkt nach Kommen" },
+        { "Action": "Kommen", "TimeKey": "DienstgangEnde", "Comment": "Nach dem Dienstgang kehrt der Beschäftigte zurück zur Dienststelle und arbeitet noch eine weitere Stunde." },
+        { "Action": "Gehen", "TimeKey": "Arbeitsende" }
+      ],
+      "RequiresBewegungsantrag": true
+    },
+    {
+      "Id": "3",
+      "Name": "Dienststätte + Pause + Dienstgang (Ende außerhalb)",
+      "Description": "Schulung an anderem Standort, Dienstgang endet außerhalb, keine Rückkehr",
+      "Category": "Dienststätte",
+      "Conditions": {
+        "OrtBeginn": "Dienststätte",
+        "Pause": "Ja",
+        "Dienstgang": "Ja",
+        "DienstgangOrt": "Anderer Ort",
+        "DienstgangEndeTyp": "Außerhalb"
+      },
+      "RequiredTimeFields": ["Arbeitsbeginn", "DienstgangStart", "PauseBeginn", "PauseEnde", "DienstgangEnde"],
+      "Steps": [
+        { "Action": "Kommen", "TimeKey": "Arbeitsbeginn" },
+        { "Action": "Dienstgang Beginn", "TimeKey": "DienstgangStart" },
+        { "Action": "Gehen", "TimeKey": "PauseBeginn", "Comment": "Pause beginnt und endet am Standort der Schulung. → ggf. Korrektur über Bewegungsantrag" },
+        { "Action": "Kommen", "TimeKey": "PauseEnde" },
+        { "Action": "Dienstgang Beginn", "TimeKey": "PauseEnde", "Comment": "Direkt nach Kommen" },
+        { "Action": "Dienstgang (Ende außerhalb)", "TimeKey": "DienstgangEnde", "Comment": "Nach dem Dienstgang kehrt der Beschäftigte nicht zurück zur Dienststelle. → ggf. Korrektur über Bewegungsantrag" }
+      ],
+      "RequiresBewegungsantrag": true
+    },
+    {
+      "Id": "4",
+      "Name": "Mobiles Arbeiten zu Hause mit Pause",
+      "Description": "Vollständiger Arbeitstag im Homeoffice mit Pause",
+      "Category": "Mobiles Arbeiten",
+      "Conditions": {
+        "OrtBeginn": "Wohnort",
+        "Pause": "Ja",
+        "Dienstgang": "Nein",
+        "OrtEnde": "Wohnort"
+      },
+      "RequiredTimeFields": ["Arbeitsbeginn", "PauseBeginn", "PauseEnde", "Arbeitsende"],
+      "Steps": [
+        { "Action": "Mob. Arbeiten Beginn", "TimeKey": "Arbeitsbeginn" },
+        { "Action": "Mob. Arbeiten Ende", "TimeKey": "PauseBeginn" },
+        { "Action": "Mob. Arbeiten Beginn", "TimeKey": "PauseEnde" },
+        { "Action": "Mob. Arbeiten Ende", "TimeKey": "Arbeitsende" }
+      ]
+    },
+    {
+      "Id": "5",
+      "Name": "Mobiles Arbeiten + Pause + Dienstgang (Rückkehr)",
+      "Description": "Homeoffice mit Dienstgang (z.B. Probeentnahme), Rückkehr und Weiterarbeit",
+      "Category": "Mobiles Arbeiten",
+      "Conditions": {
+        "OrtBeginn": "Wohnort",
+        "Pause": "Ja",
+        "Dienstgang": "Ja",
+        "DienstgangEndeTyp": "Rückkehr"
+      },
+      "RequiredTimeFields": ["Arbeitsbeginn", "PauseBeginn", "PauseEnde", "DienstgangStart", "DienstgangEnde", "Arbeitsende"],
+      "Steps": [
+        { "Action": "Mob. Arbeiten Beginn", "TimeKey": "Arbeitsbeginn" },
+        { "Action": "Mob. Arbeiten Ende", "TimeKey": "PauseBeginn" },
+        { "Action": "Mob. Arbeiten Beginn", "TimeKey": "PauseEnde" },
+        { "Action": "Dienstgang Beginn", "TimeKey": "DienstgangStart", "Comment": "am Wohnort" },
+        { "Action": "Mob. Arbeiten Beginn", "TimeKey": "DienstgangEnde", "Comment": "Nach dem Dienstgang kehrt der Beschäftigte zurück nach Hause und arbeitet noch eine weitere Stunde." },
+        { "Action": "Mob. Arbeiten Ende", "TimeKey": "Arbeitsende" }
+      ]
+    },
+    {
+      "Id": "6",
+      "Name": "Mobiles Arbeiten + Pause + Dienstgang (Ende außerhalb)",
+      "Description": "Homeoffice mit Dienstgang, der außerhalb endet",
+      "Category": "Mobiles Arbeiten",
+      "Conditions": {
+        "OrtBeginn": "Wohnort",
+        "Pause": "Ja",
+        "Dienstgang": "Ja",
+        "DienstgangEndeTyp": "Außerhalb"
+      },
+      "RequiredTimeFields": ["Arbeitsbeginn", "PauseBeginn", "PauseEnde", "DienstgangStart", "DienstgangEnde"],
+      "Steps": [
+        { "Action": "Mob. Arbeiten Beginn", "TimeKey": "Arbeitsbeginn" },
+        { "Action": "Mob. Arbeiten Ende", "TimeKey": "PauseBeginn" },
+        { "Action": "Mob. Arbeiten Beginn", "TimeKey": "PauseEnde" },
+        { "Action": "Dienstgang Beginn", "TimeKey": "DienstgangStart", "Comment": "am Wohnort" },
+        { "Action": "Dienstgang (Ende außerhalb)", "TimeKey": "DienstgangEnde", "Comment": "Nach dem Dienstgang kehrt der Beschäftigte nicht zurück. → ggf. Korrektur über Bewegungsantrag" }
+      ],
+      "RequiresBewegungsantrag": true
+    },
+    {
+      "Id": "7",
+      "Name": "Dienststätte → Dienstgang → Mobiles Arbeiten (erweiterter Außendienst)",
+      "Description": "Beginn Dienststätte, Pause, Dienstgang (Außentermin), Ende im Homeoffice",
+      "Category": "Gemischt",
+      "Conditions": {
+        "OrtBeginn": "Dienststätte",
+        "Pause": "Ja",
+        "Dienstgang": "Ja",
+        "OrtEnde": "Wohnort"
+      },
+      "RequiredTimeFields": ["Arbeitsbeginn", "PauseBeginn", "PauseEnde", "DienstgangStart", "DienstgangEnde", "Arbeitsende"],
+      "Steps": [
+        { "Action": "Kommen", "TimeKey": "Arbeitsbeginn" },
+        { "Action": "Gehen", "TimeKey": "PauseBeginn" },
+        { "Action": "Kommen", "TimeKey": "PauseEnde" },
+        { "Action": "Dienstgang Beginn", "TimeKey": "DienstgangStart" },
+        { "Action": "Mob. Arbeiten Beginn", "TimeKey": "DienstgangEnde", "Comment": "Ankunft Wohnort" },
+        { "Action": "Mob. Arbeiten Ende", "TimeKey": "Arbeitsende", "Comment": "Nach dem Dienstgang geht der Beschäftigte zur Protokollierung in das mobile Arbeiten nach Hause." }
+      ]
+    },
+    {
+      "Id": "8",
+      "Name": "Mobiles → Dienstgang → Dienststätte → Pause → später Mobiles",
+      "Description": "Beginn Homeoffice, Außentermin, Arbeit in Dienststätte mit Pause, später nochmals mobiles Arbeiten",
+      "Category": "Gemischt",
+      "Conditions": {
+        "OrtBeginn": "Wohnort",
+        "Pause": "Ja",
+        "Dienstgang": "Ja",
+        "OrtEnde": "Wohnort",
+        "ZusatzMobil": "Ja"
+      },
+      "RequiredTimeFields": ["Arbeitsbeginn", "DienstgangStart", "DienstgangEnde", "PauseBeginn", "PauseEnde", "ArbeitsendeDienststaette", "ArbeitsbeginnMobil2", "Arbeitsende"],
+      "Steps": [
+        { "Action": "Mob. Arbeiten Beginn", "TimeKey": "Arbeitsbeginn" },
+        { "Action": "Dienstgang Beginn", "TimeKey": "DienstgangStart" },
+        { "Action": "Kommen", "TimeKey": "DienstgangEnde", "Comment": "Ende Dienstgang an Dienststätte" },
+        { "Action": "Gehen", "TimeKey": "PauseBeginn" },
+        { "Action": "Kommen", "TimeKey": "PauseEnde", "Comment": "Der Beschäftigte setzt seine Arbeit in der Dienststätte fort." },
+        { "Action": "Gehen", "TimeKey": "ArbeitsendeDienststaette" },
+        { "Action": "Mob. Arbeiten Beginn", "TimeKey": "ArbeitsbeginnMobil2" },
+        { "Action": "Mob. Arbeiten Ende", "TimeKey": "Arbeitsende", "Comment": "Der Beschäftigte arbeitet nach seinem Dienstende an der Dienststätte am frühen Abend noch mobil von zuhause aus." }
+      ]
+    },
+    {
+      "Id": "9",
+      "Name": "Dienststätte + Pause + Dienstgang (anderer Ort, Rückkehr) – Dienstreise",
+      "Description": "Halbtags-Schulung an anderem Ort (z.B. Seelingstädt). Achtung: Dienstreiseantrag über Jobrouter stellen!",
+      "Category": "Dienststätte",
+      "Conditions": {
+        "OrtBeginn": "Dienststätte",
+        "Pause": "Ja",
+        "Dienstgang": "Ja",
+        "DienstgangOrt": "Anderer Ort",
+        "DienstgangEndeTyp": "Rückkehr",
+        "Dienstreise": "Ja"
+      },
+      "RequiredTimeFields": ["Arbeitsbeginn", "DienstgangStart", "PauseBeginn", "PauseEnde", "DienstgangEnde", "Arbeitsende"],
+      "Steps": [
+        { "Action": "Kommen", "TimeKey": "Arbeitsbeginn" },
+        { "Action": "Dienstgang Beginn", "TimeKey": "DienstgangStart" },
+        { "Action": "Gehen", "TimeKey": "PauseBeginn", "Comment": "Pause beginnt und endet am Standort der Schulung. → ggf. Korrektur über Bewegungsantrag" },
+        { "Action": "Kommen", "TimeKey": "PauseEnde" },
+        { "Action": "Dienstgang Beginn", "TimeKey": "PauseEnde", "Comment": "Direkt nach Kommen" },
+        { "Action": "Kommen", "TimeKey": "DienstgangEnde", "Comment": "Nach dem Dienstgang kehrt der Beschäftigte zurück zur Dienststelle und arbeitet noch eine weitere Stunde." },
+        { "Action": "Gehen", "TimeKey": "Arbeitsende" }
+      ],
+      "AttentionNote": "Achtung: Dienstreiseantrag über Jobrouter stellen!",
+      "RequiresBewegungsantrag": true
+    },
+    {
+      "Id": "10",
+      "Name": "Dienstbeginn am Einsatzort (Angestellte)",
+      "Description": "Beginn direkt am Einsatzort ohne vorheriges mobiles Arbeiten. Fahrzeit Wohnort→Einsatzort ist KEINE Arbeitszeit.",
+      "Category": "Einsatzort",
+      "Conditions": {
+        "OrtBeginn": "Einsatzort",
+        "Pause": "Ja",
+        "Dienstgang": "Ja",
+        "MitarbeiterTyp": "Angestellte",
+        "DienstgangEndeTyp": "Außerhalb"
+      },
+      "RequiredTimeFields": ["Arbeitsbeginn", "DienstgangStart", "PauseBeginn", "PauseEnde", "DienstgangEnde"],
+      "Steps": [
+        { "Action": "Kommen", "TimeKey": "Arbeitsbeginn", "Comment": "→ ggf. Korrektur über Bewegungsantrag" },
+        { "Action": "Dienstgang Beginn", "TimeKey": "DienstgangStart", "Comment": "→ ggf. Korrektur über Bewegungsantrag" },
+        { "Action": "Gehen", "TimeKey": "PauseBeginn", "Comment": "→ ggf. Korrektur über Bewegungsantrag" },
+        { "Action": "Kommen", "TimeKey": "PauseEnde" },
+        { "Action": "Dienstgang Beginn", "TimeKey": "PauseEnde", "Comment": "Direkt nach Kommen" },
+        { "Action": "Dienstgang (Ende außerhalb)", "TimeKey": "DienstgangEnde", "Comment": "Nach dem Dienstgang beendet der Beschäftigte seinen Dienst am Einsatzort. → ggf. Korrektur über Bewegungsantrag" }
+      ],
+      "AttentionNote": "Achtung: Die Fahrzeit vom Wohnort zum Einsatzort stellt keine Arbeitszeit dar! (Angestellte)",
+      "RequiresBewegungsantrag": true
+    },
+    {
+      "Id": "11",
+      "Name": "Dienstbeginn am Einsatzort (Beamte)",
+      "Description": "Beginn am Wohnort (Fahrzeit ist Arbeitszeit!), dann Außendienst. Andere Regelung als Angestellte.",
+      "Category": "Einsatzort",
+      "Conditions": {
+        "OrtBeginn": "Wohnort",
+        "Pause": "Ja",
+        "Dienstgang": "Ja",
+        "MitarbeiterTyp": "Beamte",
+        "DienstgangEndeTyp": "Außerhalb"
+      },
+      "RequiredTimeFields": ["Arbeitsbeginn", "DienstgangStart", "PauseBeginn", "PauseEnde", "DienstgangEnde"],
+      "Steps": [
+        { "Action": "Kommen", "TimeKey": "Arbeitsbeginn", "Comment": "→ ggf. Korrektur über Bewegungsantrag" },
+        { "Action": "Dienstgang Beginn", "TimeKey": "DienstgangStart", "Comment": "→ ggf. Korrektur über Bewegungsantrag" },
+        { "Action": "Gehen", "TimeKey": "PauseBeginn", "Comment": "→ ggf. Korrektur über Bewegungsantrag" },
+        { "Action": "Kommen", "TimeKey": "PauseEnde" },
+        { "Action": "Dienstgang Beginn", "TimeKey": "PauseEnde", "Comment": "Direkt nach Kommen" },
+        { "Action": "Dienstgang (Ende außerhalb)", "TimeKey": "DienstgangEnde", "Comment": "Nach dem Dienstgang beendet der Beschäftigte seinen Dienst am Einsatzort. → ggf. Korrektur über Bewegungsantrag" }
+      ],
+      "AttentionNote": "Achtung: Die Fahrzeit vom Wohnort zum Einsatzort stellt Arbeitszeit dar! (Beamte!)",
+      "RequiresBewegungsantrag": true
+    },
+    {
+      "Id": "12",
+      "Name": "Fortbildung (z.B. Erfurt)",
+      "Description": "Fortbildung an anderem Ort. Bewegungsanträge NACH der Fortbildung stellen. Fahrzeiten in zusätzlichen Informationen angeben.",
+      "Category": "Fortbildung",
+      "Conditions": {
+        "OrtBeginn": "Fortbildungsort",
+        "Pause": "Nein",
+        "Dienstgang": "Nein"
+      },
+      "RequiredTimeFields": ["FortbildungBeginn", "FortbildungEnde", "FahrtBeginnHin", "AnkunftOrt", "FahrtBeginnRueck", "AnkunftWohnort"],
+      "Steps": [
+        { "Action": "Fortbildung Beginn", "TimeKey": "FortbildungBeginn", "Comment": "Keine Enddatum/Endzeit erfassen. Führungskraft auswählen." },
+        { "Action": "Fortbildung Ende", "TimeKey": "FortbildungEnde", "Comment": "Keine Enddatum/Endzeit erfassen. Führungskraft auswählen." }
+      ],
+      "AttentionNote": "Im Feld „zusätzliche Informationen“ die Fahrzeiten angeben:\nHin: Fahrtbeginn Wohnort …, Ankunft …\nRück: Fahrtbeginn Ort …, Ankunft Wohnort …",
+      "RequiresBewegungsantrag": true
+    }
+  ]
+}

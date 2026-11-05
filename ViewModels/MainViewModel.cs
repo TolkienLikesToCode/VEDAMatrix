@@ -1,0 +1,257 @@
+using System.Collections.ObjectModel;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using VedaMatrix.Models;
+using VedaMatrix.Services;
+
+namespace VedaMatrix.ViewModels;
+
+public partial class MainViewModel : ObservableObject
+{
+    private readonly ConfigService _configService;
+    private readonly MatrixEngine _engine;
+    private readonly ProcedureConfig _config;
+
+    public MainViewModel()
+    {
+        _configService = new ConfigService();
+        _config = _configService.Load();
+        _engine = new MatrixEngine(_config.Procedures);
+
+        // Dropdown options
+        OrtBeginnOptions = new ObservableCollection<string> { "Dienststätte", "Wohnort", "Einsatzort", "Fortbildungsort" };
+        PauseOptions = new ObservableCollection<string> { "Ja", "Nein" };
+        DienstgangOptions = new ObservableCollection<string> { "Ja", "Nein" };
+        DienstgangOrtOptions = new ObservableCollection<string> { "Gleicher Ort", "Anderer Ort" };
+        DienstgangEndeTypOptions = new ObservableCollection<string> { "Rückkehr", "Außerhalb" };
+        OrtEndeOptions = new ObservableCollection<string> { "Dienststätte", "Wohnort" };
+        MitarbeiterTypOptions = new ObservableCollection<string> { "Angestellte", "Beamte" };
+        ZusatzMobilOptions = new ObservableCollection<string> { "Nein", "Ja" };
+        DienstreiseOptions = new ObservableCollection<string> { "Nein", "Ja" };
+
+        // Defaults
+        SelectedOrtBeginn = "Dienststätte";
+        SelectedPause = "Ja";
+        SelectedDienstgang = "Nein";
+        SelectedDienstgangOrt = "Gleicher Ort";
+        SelectedDienstgangEndeTyp = "Rückkehr";
+        SelectedOrtEnde = "Dienststätte";
+        SelectedMitarbeiterTyp = "Angestellte";
+        SelectedZusatzMobil = "Nein";
+        SelectedDienstreise = "Nein";
+
+        TimeInputs = new ObservableCollection<TimeInputItem>();
+        BookingResults = new ObservableCollection<BookingResultItem>();
+        MatchingProcedures = new ObservableCollection<Procedure>();
+
+        UpdateVisibility();
+        UpdateMatches();
+    }
+
+    // Selections
+    [ObservableProperty] private string? selectedOrtBeginn;
+    [ObservableProperty] private string? selectedPause;
+    [ObservableProperty] private string? selectedDienstgang;
+    [ObservableProperty] private string? selectedDienstgangOrt;
+    [ObservableProperty] private string? selectedDienstgangEndeTyp;
+    [ObservableProperty] private string? selectedOrtEnde;
+    [ObservableProperty] private string? selectedMitarbeiterTyp;
+    [ObservableProperty] private string? selectedZusatzMobil;
+    [ObservableProperty] private string? selectedDienstreise;
+
+    // Visibility flags
+    [ObservableProperty] private bool showDienstgangDetails;
+    [ObservableProperty] private bool showDienstgangOrt;
+    [ObservableProperty] private bool showOrtEnde;
+    [ObservableProperty] private bool showMitarbeiterTyp;
+    [ObservableProperty] private bool showZusatzMobil;
+    [ObservableProperty] private bool showDienstreise;
+    [ObservableProperty] private bool showFortbildungHint;
+
+    // Options
+    public ObservableCollection<string> OrtBeginnOptions { get; }
+    public ObservableCollection<string> PauseOptions { get; }
+    public ObservableCollection<string> DienstgangOptions { get; }
+    public ObservableCollection<string> DienstgangOrtOptions { get; }
+    public ObservableCollection<string> DienstgangEndeTypOptions { get; }
+    public ObservableCollection<string> OrtEndeOptions { get; }
+    public ObservableCollection<string> MitarbeiterTypOptions { get; }
+    public ObservableCollection<string> ZusatzMobilOptions { get; }
+    public ObservableCollection<string> DienstreiseOptions { get; }
+
+    // Dynamic time inputs
+    public ObservableCollection<TimeInputItem> TimeInputs { get; }
+
+    // Results
+    public ObservableCollection<BookingResultItem> BookingResults { get; }
+    public ObservableCollection<Procedure> MatchingProcedures { get; }
+
+    [ObservableProperty] private Procedure? selectedProcedure;
+    [ObservableProperty] private string? attentionNote;
+    [ObservableProperty] private string statusMessage = "Bitte Auswahl treffen und Zeiten eingeben.";
+
+    partial void OnSelectedOrtBeginnChanged(string? value)
+    {
+        if (value == "Wohnort" || value == "Fortbildungsort")
+            SelectedOrtEnde = "Wohnort";
+        else if (value == "Dienststätte" || value == "Einsatzort")
+            SelectedOrtEnde = "Dienststätte";
+        UpdateVisibility();
+        UpdateMatches();
+    }
+    partial void OnSelectedPauseChanged(string? value) { UpdateVisibility(); UpdateMatches(); }
+    partial void OnSelectedDienstgangChanged(string? value) { UpdateVisibility(); UpdateMatches(); }
+    partial void OnSelectedDienstgangOrtChanged(string? value) { UpdateMatches(); }
+    partial void OnSelectedDienstgangEndeTypChanged(string? value) { UpdateMatches(); }
+    partial void OnSelectedOrtEndeChanged(string? value) { UpdateMatches(); }
+    partial void OnSelectedMitarbeiterTypChanged(string? value) { UpdateMatches(); }
+    partial void OnSelectedZusatzMobilChanged(string? value) { UpdateMatches(); }
+    partial void OnSelectedDienstreiseChanged(string? value) { UpdateMatches(); }
+
+    private void UpdateVisibility()
+    {
+        ShowDienstgangDetails = SelectedDienstgang == "Ja";
+        ShowDienstgangOrt = SelectedDienstgang == "Ja" && SelectedOrtBeginn == "Dienststätte";
+        ShowOrtEnde = true; // immer anzeigen für präzises Matching
+        ShowMitarbeiterTyp = SelectedOrtBeginn == "Einsatzort" || (SelectedOrtBeginn == "Wohnort" && SelectedDienstgang == "Ja");
+        ShowZusatzMobil = SelectedOrtBeginn == "Wohnort" && SelectedDienstgang == "Ja";
+        ShowDienstreise = SelectedOrtBeginn == "Dienststätte" && SelectedDienstgang == "Ja" && SelectedDienstgangOrt == "Anderer Ort";
+        ShowFortbildungHint = SelectedOrtBeginn == "Fortbildungsort";
+    }
+
+    private Dictionary<string, string> BuildSelections()
+    {
+        var s = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        if (!string.IsNullOrEmpty(SelectedOrtBeginn)) s["OrtBeginn"] = SelectedOrtBeginn;
+        if (!string.IsNullOrEmpty(SelectedPause)) s["Pause"] = SelectedPause;
+        if (!string.IsNullOrEmpty(SelectedDienstgang)) s["Dienstgang"] = SelectedDienstgang;
+        if (ShowDienstgangDetails && !string.IsNullOrEmpty(SelectedDienstgangEndeTyp))
+            s["DienstgangEndeTyp"] = SelectedDienstgangEndeTyp;
+        if (ShowDienstgangOrt && !string.IsNullOrEmpty(SelectedDienstgangOrt))
+            s["DienstgangOrt"] = SelectedDienstgangOrt;
+        if (!string.IsNullOrEmpty(SelectedOrtEnde))
+            s["OrtEnde"] = SelectedOrtEnde;
+        if (ShowMitarbeiterTyp && !string.IsNullOrEmpty(SelectedMitarbeiterTyp))
+            s["MitarbeiterTyp"] = SelectedMitarbeiterTyp;
+        if (ShowZusatzMobil && !string.IsNullOrEmpty(SelectedZusatzMobil))
+            s["ZusatzMobil"] = SelectedZusatzMobil;
+        if (ShowDienstreise && !string.IsNullOrEmpty(SelectedDienstreise))
+            s["Dienstreise"] = SelectedDienstreise;
+        return s;
+    }
+
+    private void UpdateMatches()
+    {
+        var selections = BuildSelections();
+        MatchingProcedures.Clear();
+        foreach (var p in _engine.FindMatching(selections))
+            MatchingProcedures.Add(p);
+
+        SelectedProcedure = MatchingProcedures.FirstOrDefault()
+                            ?? _engine.FindBestMatch(selections);
+
+        UpdateTimeFields();
+        AttentionNote = SelectedProcedure?.AttentionNote;
+        StatusMessage = SelectedProcedure != null
+            ? $"Gefunden: {SelectedProcedure.Name}"
+            : "Keine passende Prozedur. Auswahl anpassen.";
+    }
+
+    private void UpdateTimeFields()
+    {
+        TimeInputs.Clear();
+        if (SelectedProcedure == null) return;
+
+        var labels = _config.TimeFieldLabels;
+        foreach (var key in SelectedProcedure.RequiredTimeFields)
+        {
+            labels.TryGetValue(key, out var label);
+            TimeInputs.Add(new TimeInputItem
+            {
+                Key = key,
+                Label = label ?? key,
+                Value = GetDefaultTime(key)
+            });
+        }
+    }
+
+    private static string GetDefaultTime(string key) => key switch
+    {
+        "Arbeitsbeginn" => "07:00",
+        "PauseBeginn" => "12:30",
+        "PauseEnde" => "13:00",
+        "DienstgangStart" => "09:00",
+        "DienstgangEnde" => "15:30",
+        "Arbeitsende" => "16:00",
+        "ArbeitsendeDienststaette" => "15:00",
+        "ArbeitsbeginnMobil2" => "17:00",
+        "FortbildungBeginn" => "09:00",
+        "FortbildungEnde" => "15:45",
+        "FahrtBeginnHin" => "07:00",
+        "AnkunftOrt" => "08:15",
+        "FahrtBeginnRueck" => "16:00",
+        "AnkunftWohnort" => "17:30",
+        _ => "08:00"
+    };
+
+    [RelayCommand]
+    private void Generate()
+    {
+        if (SelectedProcedure == null)
+        {
+            StatusMessage = "Keine Prozedur ausgewählt.";
+            return;
+        }
+
+        var times = TimeInputs.ToDictionary(t => t.Key, t => t.Value ?? "");
+        var bookings = _engine.GenerateBookings(SelectedProcedure, times);
+
+        BookingResults.Clear();
+        int i = 1;
+        foreach (var (action, time, comment) in bookings)
+        {
+            BookingResults.Add(new BookingResultItem
+            {
+                Nummer = i++,
+                Aktion = action,
+                Zeit = time,
+                Kommentar = comment ?? ""
+            });
+        }
+
+        StatusMessage = $"Buchungssequenz generiert ({bookings.Count} Schritte).";
+        if (SelectedProcedure.RequiresBewegungsantrag)
+            StatusMessage += " ⚠ Bewegungsantrag ggf. erforderlich.";
+    }
+
+    [RelayCommand]
+    private void Reset()
+    {
+        SelectedOrtBeginn = "Dienststätte";
+        SelectedPause = "Ja";
+        SelectedDienstgang = "Nein";
+        SelectedDienstgangOrt = "Gleicher Ort";
+        SelectedDienstgangEndeTyp = "Rückkehr";
+        SelectedOrtEnde = "Dienststätte";
+        SelectedMitarbeiterTyp = "Angestellte";
+        SelectedZusatzMobil = "Nein";
+        SelectedDienstreise = "Nein";
+        BookingResults.Clear();
+        StatusMessage = "Zurückgesetzt.";
+    }
+}
+
+public partial class TimeInputItem : ObservableObject
+{
+    public string Key { get; set; } = "";
+    public string Label { get; set; } = "";
+    [ObservableProperty] private string? value;
+}
+
+public partial class BookingResultItem : ObservableObject
+{
+    public int Nummer { get; set; }
+    public string Aktion { get; set; } = "";
+    public string Zeit { get; set; } = "";
+    public string Kommentar { get; set; } = "";
+}
