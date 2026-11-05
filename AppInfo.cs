@@ -14,7 +14,7 @@ public static class AppInfo
     public const string Name = "VEDA Matrix";
 
     /// <summary>Semantic version string.</summary>
-    public const string Version = "0.0.2";
+    public const string Version = "1.0.0";
 
     /// <summary>Author / organization responsible for this tool.</summary>
     public const string Author = "Lenny Kunz";

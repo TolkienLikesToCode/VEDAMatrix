@@ -117,6 +117,29 @@
               </Grid>
             </StackPanel>
           </Border>
+
+          <Border Classes="card">
+            <StackPanel Spacing="8">
+              <DockPanel>
+                <Button DockPanel.Dock="Right" Content="+ Pause" Click="OnAddPause" Padding="10,4" FontSize="12"/>
+                <TextBlock Text="ZUSÄTZLICHE PAUSEN" FontWeight="Bold" FontSize="12" LetterSpacing="1" VerticalAlignment="Center"/>
+              </DockPanel>
+              <TextBlock Text="Optional. Werden als Gehen/Kommen eingefügt und zählen nicht als Arbeitszeit."
+                         Foreground="#888888" FontSize="11" TextWrapping="Wrap"/>
+              <ItemsControl ItemsSource="{Binding CustomPauses}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate>
+                    <DockPanel Margin="0,0,0,6">
+                      <Button DockPanel.Dock="Right" Content="✕" Tag="{Binding}" Click="OnRemovePause"
+                              Classes="secondary" Padding="8,2" FontSize="11"/>
+                      <TextBlock Text="{Binding Display}" VerticalAlignment="Center" FontSize="12"/>
+                    </DockPanel>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
+          </Border>
+
         </StackPanel>
       </ScrollViewer>
 
@@ -157,6 +180,10 @@
                 <TextBlock Grid.Column="2" Text="Differenz" Foreground="#555555"/>
                 <TextBlock Grid.Column="3" Text="{Binding SummaryDifferenz}" FontWeight="SemiBold"/>
               </Grid>
+              <Grid ColumnDefinitions="120,80">
+                <TextBlock Text="Soll-Arbeitsende" Foreground="#555555"/>
+                <TextBlock Grid.Column="1" Text="{Binding SummarySollEnde}" FontWeight="SemiBold"/>
+              </Grid>
               <TextBlock Text="{Binding SummaryWarning}"
                          IsVisible="{Binding ShowSummaryWarning}"
                          FontWeight="Bold"
@@ -176,7 +203,7 @@
         <Button Content="Zurücksetzen" Command="{Binding ResetCommand}" Classes="secondary"/>
         <Button Content="Buchungen generieren" Command="{Binding GenerateCommand}"/>
       </StackPanel>
-      <TextBlock Text="VEDA Matrix v1.0.0  ·  eGovernment  ·  © 2026 eGovernment"
+      <TextBlock Text="VEDA Matrix v1.0.0  ·  eGovernment  ·  © 2026 Lenny Kunz"
                  Foreground="#888888"
                  FontSize="11"
                  VerticalAlignment="Center"/>

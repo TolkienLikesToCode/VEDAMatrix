@@ -25,6 +25,7 @@ public partial class MainViewModel : ObservableObject
     public ObservableCollection<TimeInputItem> TimeInputs { get; } = new();
     public ObservableCollection<BookingResultItem> BookingResults { get; } = new();
     public ObservableCollection<Procedure> ProcedureTemplates { get; } = new();
+    public ObservableCollection<PauseEntry> CustomPauses { get; } = new();
 
     private bool _suppressHandlers;
 
@@ -105,6 +106,7 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty] private string summarySollzeit = "07:48";
     [ObservableProperty] private string summaryDifferenz = "—";
     [ObservableProperty] private string summaryPause = "—";
+    [ObservableProperty] private string summarySollEnde = "—";
     [ObservableProperty] private string summaryWarning = "";
     [ObservableProperty] private bool showSummaryWarning;
 
@@ -349,7 +351,7 @@ public partial class MainViewModel : ObservableObject
         }
 
         var times = TimeInputs.ToDictionary(t => t.Key, t => t.Value ?? "");
-        var bookings = _engine.GenerateBookings(SelectedProcedure, times);
+        var bookings = _engine.GenerateBookings(SelectedProcedure, times, CustomPauses.ToList());
 
         BookingResults.Clear();
         int i = 1;
@@ -371,6 +373,7 @@ public partial class MainViewModel : ObservableObject
         SummarySollzeit = summary.SollzeitText;
         SummaryDifferenz = summary.DifferenzText;
         SummaryPause = summary.PauseText;
+        SummarySollEnde = summary.SollEndeText;
         ShowSummaryWarning = summary.Exceeds10h;
         SummaryWarning = summary.Exceeds10h
             ? "⚠ Arbeitszeit überschreitet die 10-Stunden-Grenze!"
@@ -381,6 +384,13 @@ public partial class MainViewModel : ObservableObject
             StatusMessage += "  ·  Bewegungsantrag ggf. erforderlich.";
         if (summary.Exceeds10h)
             StatusMessage += "  ·  10h-Limit überschritten.";
+    }
+
+    [RelayCommand]
+    private void RemovePause(PauseEntry? pause)
+    {
+        if (pause != null)
+            CustomPauses.Remove(pause);
     }
 
     [RelayCommand]
@@ -400,10 +410,12 @@ public partial class MainViewModel : ObservableObject
         _suppressHandlers = false;
 
         BookingResults.Clear();
+        CustomPauses.Clear();
         SummaryGearbeitet = "—";
         SummarySollzeit = "07:48";
         SummaryDifferenz = "—";
         SummaryPause = "—";
+        SummarySollEnde = "—";
         SummaryWarning = "";
         ShowSummaryWarning = false;
 

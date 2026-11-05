@@ -4,6 +4,7 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using VedaMatrix.Services;
 using VedaMatrix.ViewModels;
+using VedaMatrix.Models;
 using VedaMatrix.Views;
 
 namespace VedaMatrix;
@@ -101,4 +102,22 @@ public partial class MainWindow : Window
         if (result != null)
             vm.SelectedTemplate = result;
     }
+
+    private void OnRemovePause(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is not MainViewModel vm) return;
+        if (sender is Button { Tag: PauseEntry pause })
+            vm.CustomPauses.Remove(pause);
+    }
+
+    private async void OnAddPause(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is not MainViewModel vm) return;
+
+        var dialog = new PauseDialog();
+        var result = await dialog.ShowDialog<PauseEntry?>(this);
+        if (result != null)
+            vm.CustomPauses.Add(result);
+    }
 }
+

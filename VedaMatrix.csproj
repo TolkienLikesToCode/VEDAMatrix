@@ -10,13 +10,13 @@
     <ApplicationIcon>Assets\app.ico</ApplicationIcon>
 
     <!-- Assembly / product metadata -->
-    <Authors>eGovernment</Authors>
+    <Authors>Lenny Kunz</Authors>
     <Company>eGovernment</Company>
     <Product>VEDA Matrix</Product>
     <AssemblyTitle>VEDA Matrix</AssemblyTitle>
     <Title>VEDA Matrix</Title>
     <Description>Buchungsvorgänge im Veda Horizon – Entscheidungsmatrix</Description>
-    <Copyright>© 2026 eGovernment</Copyright>
+    <Copyright>© 2026 Lenny Kunz</Copyright>
     <Version>1.0.0</Version>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
     <FileVersion>1.0.0.0</FileVersion>
