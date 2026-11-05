@@ -4,8 +4,8 @@
         x:Class="VedaMatrix.MainWindow"
         x:DataType="vm:MainViewModel"
         Title="VEDA Matrix"
-        Width="1000" Height="820"
-        MinWidth="820" MinHeight="640"
+        Width="1100" Height="840"
+        MinWidth="900" MinHeight="640"
         WindowStartupLocation="CenterScreen"
         Background="#FFFFFF"
         FontFamily="Inter, Segoe UI, Helvetica, Arial, sans-serif"
@@ -19,96 +19,99 @@
     <!-- Header -->
     <StackPanel Grid.Row="0" Spacing="4" Margin="0,0,0,16">
       <TextBlock Text="VEDA MATRIX" FontSize="22" FontWeight="Bold" Foreground="#111111"/>
-      <TextBlock Text="Buchungsvorgänge im Veda Horizon – Entscheidungsmatrix" Foreground="#555555"/>
+      <TextBlock Text="Buchungsvorgänge im Veda Horizon – Vorlagen &amp; Entscheidungsmatrix" Foreground="#555555"/>
     </StackPanel>
 
-    <!-- Main content -->
-    <Grid Grid.Row="1" ColumnDefinitions="340,*" ColumnSpacing="20">
-      <!-- Left: Selections -->
-      <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto">
+    <!-- Main content: templates | details+times | results -->
+    <Grid Grid.Row="1" ColumnDefinitions="280,300,*" ColumnSpacing="16">
+
+      <!-- ── Column 1: Template list ── -->
+      <Border Grid.Column="0" Classes="card">
+        <Grid RowDefinitions="Auto,*">
+          <TextBlock Grid.Row="0" Text="VORLAGEN" FontWeight="Bold" FontSize="12" LetterSpacing="1" Margin="0,0,0,10"/>
+          <ListBox Grid.Row="1"
+                   ItemsSource="{Binding ProcedureTemplates}"
+                   SelectedItem="{Binding SelectedTemplate}"
+                   Background="Transparent"
+                   BorderThickness="0">
+            <ListBox.ItemTemplate>
+              <DataTemplate>
+                <StackPanel Spacing="2" Margin="0,4">
+                  <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextWrapping="Wrap" FontSize="12"/>
+                  <TextBlock Text="{Binding Description}" Foreground="#666666" TextWrapping="Wrap" FontSize="11"/>
+                  <TextBlock Text="{Binding Category}" Foreground="#999999" FontSize="10" Margin="0,2,0,0"/>
+                </StackPanel>
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
+        </Grid>
+      </Border>
+
+      <!-- ── Column 2: Selection details + times ── -->
+      <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto">
         <StackPanel Spacing="12">
+
+          <Border Classes="card">
+            <StackPanel Spacing="6">
+              <TextBlock Text="GEWÄHLTE PROZEDUR" FontWeight="Bold" FontSize="12" LetterSpacing="1"/>
+              <TextBlock Text="{Binding SelectedProcedure.Name}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+              <TextBlock Text="{Binding SelectedProcedure.Description}" Foreground="#555555" TextWrapping="Wrap" FontSize="12"/>
+              <TextBlock Text="{Binding AttentionNote}" Foreground="#111111" FontWeight="SemiBold" TextWrapping="Wrap"/>
+            </StackPanel>
+          </Border>
+
           <Border Classes="card">
             <StackPanel Spacing="10">
-              <TextBlock Text="AUSWAHL" FontWeight="Bold" FontSize="12" LetterSpacing="1"/>
+              <TextBlock Text="PARAMETER (optional anpassen)" FontWeight="Bold" FontSize="12" LetterSpacing="1"/>
 
               <TextBlock Text="Arbeitsbeginn Ort" FontSize="11" Foreground="#555555"/>
-              <ComboBox ItemsSource="{Binding OrtBeginnOptions}"
-                        SelectedItem="{Binding SelectedOrtBeginn}"
-                        HorizontalAlignment="Stretch"/>
+              <ComboBox ItemsSource="{Binding OrtBeginnOptions}" SelectedItem="{Binding SelectedOrtBeginn}" HorizontalAlignment="Stretch"/>
 
               <TextBlock Text="Pause" FontSize="11" Foreground="#555555"/>
-              <ComboBox ItemsSource="{Binding PauseOptions}"
-                        SelectedItem="{Binding SelectedPause}"
-                        HorizontalAlignment="Stretch"/>
+              <ComboBox ItemsSource="{Binding PauseOptions}" SelectedItem="{Binding SelectedPause}" HorizontalAlignment="Stretch"/>
 
               <TextBlock Text="Dienstgang" FontSize="11" Foreground="#555555"/>
-              <ComboBox ItemsSource="{Binding DienstgangOptions}"
-                        SelectedItem="{Binding SelectedDienstgang}"
-                        HorizontalAlignment="Stretch"/>
+              <ComboBox ItemsSource="{Binding DienstgangOptions}" SelectedItem="{Binding SelectedDienstgang}" HorizontalAlignment="Stretch"/>
 
               <StackPanel IsVisible="{Binding ShowDienstgangDetails}" Spacing="10">
                 <TextBlock Text="Dienstgang Ende-Typ" FontSize="11" Foreground="#555555"/>
-                <ComboBox ItemsSource="{Binding DienstgangEndeTypOptions}"
-                          SelectedItem="{Binding SelectedDienstgangEndeTyp}"
-                          HorizontalAlignment="Stretch"/>
+                <ComboBox ItemsSource="{Binding DienstgangEndeTypOptions}" SelectedItem="{Binding SelectedDienstgangEndeTyp}" HorizontalAlignment="Stretch"/>
               </StackPanel>
 
               <StackPanel IsVisible="{Binding ShowDienstgangOrt}" Spacing="10">
                 <TextBlock Text="Dienstgang Ort" FontSize="11" Foreground="#555555"/>
-                <ComboBox ItemsSource="{Binding DienstgangOrtOptions}"
-                          SelectedItem="{Binding SelectedDienstgangOrt}"
-                          HorizontalAlignment="Stretch"/>
+                <ComboBox ItemsSource="{Binding DienstgangOrtOptions}" SelectedItem="{Binding SelectedDienstgangOrt}" HorizontalAlignment="Stretch"/>
               </StackPanel>
 
               <StackPanel IsVisible="{Binding ShowOrtEnde}" Spacing="10">
                 <TextBlock Text="Arbeitsende Ort" FontSize="11" Foreground="#555555"/>
-                <ComboBox ItemsSource="{Binding OrtEndeOptions}"
-                          SelectedItem="{Binding SelectedOrtEnde}"
-                          HorizontalAlignment="Stretch"/>
+                <ComboBox ItemsSource="{Binding OrtEndeOptions}" SelectedItem="{Binding SelectedOrtEnde}" HorizontalAlignment="Stretch"/>
               </StackPanel>
 
               <StackPanel IsVisible="{Binding ShowMitarbeiterTyp}" Spacing="10">
                 <TextBlock Text="Mitarbeiter-Typ" FontSize="11" Foreground="#555555"/>
-                <ComboBox ItemsSource="{Binding MitarbeiterTypOptions}"
-                          SelectedItem="{Binding SelectedMitarbeiterTyp}"
-                          HorizontalAlignment="Stretch"/>
+                <ComboBox ItemsSource="{Binding MitarbeiterTypOptions}" SelectedItem="{Binding SelectedMitarbeiterTyp}" HorizontalAlignment="Stretch"/>
               </StackPanel>
 
               <StackPanel IsVisible="{Binding ShowZusatzMobil}" Spacing="10">
                 <TextBlock Text="Zusätzliches mobiles Arbeiten später" FontSize="11" Foreground="#555555"/>
-                <ComboBox ItemsSource="{Binding ZusatzMobilOptions}"
-                          SelectedItem="{Binding SelectedZusatzMobil}"
-                          HorizontalAlignment="Stretch"/>
+                <ComboBox ItemsSource="{Binding ZusatzMobilOptions}" SelectedItem="{Binding SelectedZusatzMobil}" HorizontalAlignment="Stretch"/>
               </StackPanel>
 
               <StackPanel IsVisible="{Binding ShowDienstreise}" Spacing="10">
                 <TextBlock Text="Dienstreiseantrag erforderlich?" FontSize="11" Foreground="#555555"/>
-                <ComboBox ItemsSource="{Binding DienstreiseOptions}"
-                          SelectedItem="{Binding SelectedDienstreise}"
-                          HorizontalAlignment="Stretch"/>
+                <ComboBox ItemsSource="{Binding DienstreiseOptions}" SelectedItem="{Binding SelectedDienstreise}" HorizontalAlignment="Stretch"/>
               </StackPanel>
             </StackPanel>
           </Border>
 
-          <!-- Matching procedure -->
-          <Border Classes="card">
-            <StackPanel Spacing="6">
-              <TextBlock Text="GEFUNDENE PROZEDUR" FontWeight="Bold" FontSize="12" LetterSpacing="1"/>
-              <TextBlock Text="{Binding SelectedProcedure.Name}" FontWeight="SemiBold" TextWrapping="Wrap"/>
-              <TextBlock Text="{Binding SelectedProcedure.Description}" Foreground="#555555" TextWrapping="Wrap" FontSize="12"/>
-              <TextBlock Text="{Binding AttentionNote}" Foreground="#111111" FontWeight="SemiBold"
-                         TextWrapping="Wrap"/>
-            </StackPanel>
-          </Border>
-
-          <!-- Time inputs + Sollzeit -->
           <Border Classes="card">
             <StackPanel Spacing="8">
               <TextBlock Text="ZEITEN" FontWeight="Bold" FontSize="12" LetterSpacing="1"/>
               <ItemsControl ItemsSource="{Binding TimeInputs}">
                 <ItemsControl.ItemTemplate>
                   <DataTemplate>
-                    <Grid ColumnDefinitions="*,110" Margin="0,0,0,6">
+                    <Grid ColumnDefinitions="*,100" Margin="0,0,0,6">
                       <TextBlock Text="{Binding Label}" VerticalAlignment="Center" FontSize="12"/>
                       <TextBox Grid.Column="1" Text="{Binding Value}" Watermark="HH:mm"/>
                     </Grid>
@@ -118,7 +121,7 @@
 
               <Border Height="1" Background="#DDDDDD" Margin="0,6"/>
 
-              <Grid ColumnDefinitions="*,110">
+              <Grid ColumnDefinitions="*,100">
                 <TextBlock Text="Sollarbeitszeit" VerticalAlignment="Center" FontSize="12" FontWeight="SemiBold"/>
                 <TextBox Grid.Column="1" Text="{Binding SollzeitText}" Watermark="07:48"/>
               </Grid>
@@ -127,8 +130,8 @@
         </StackPanel>
       </ScrollViewer>
 
-      <!-- Right: Results -->
-      <Border Grid.Column="1" Classes="card">
+      <!-- ── Column 3: Results ── -->
+      <Border Grid.Column="2" Classes="card">
         <Grid RowDefinitions="Auto,*,Auto,Auto">
           <TextBlock Grid.Row="0" Text="BUCHUNGSSEQUENZ" FontWeight="Bold" FontSize="12" LetterSpacing="1" Margin="0,0,0,12"/>
 
@@ -137,7 +140,7 @@
               <ItemsControl.ItemTemplate>
                 <DataTemplate>
                   <Border BorderBrush="#DDDDDD" BorderThickness="0,0,0,1" Padding="0,8">
-                    <Grid ColumnDefinitions="28,170,70,*">
+                    <Grid ColumnDefinitions="28,160,70,*">
                       <TextBlock Text="{Binding Nummer}" FontWeight="Bold" VerticalAlignment="Top"/>
                       <TextBlock Grid.Column="1" Text="{Binding Aktion}" FontWeight="SemiBold" VerticalAlignment="Top"/>
                       <TextBlock Grid.Column="2" Text="{Binding Zeit}" VerticalAlignment="Top"/>
@@ -149,7 +152,6 @@
             </ItemsControl>
           </ScrollViewer>
 
-          <!-- Summary -->
           <Border Grid.Row="2" BorderBrush="#CCCCCC" BorderThickness="0,1,0,0" Padding="0,12,0,0" Margin="0,8,0,0">
             <StackPanel Spacing="6">
               <TextBlock Text="ZEITÜBERSICHT" FontWeight="Bold" FontSize="12" LetterSpacing="1"/>
@@ -176,7 +178,7 @@
       </Border>
     </Grid>
 
-    <!-- Footer buttons -->
+    <!-- Footer -->
     <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="12" Margin="0,16,0,0" HorizontalAlignment="Right">
       <Button Content="Zurücksetzen" Command="{Binding ResetCommand}" Background="#FFFFFF" Foreground="#111111" BorderBrush="#111111"/>
       <Button Content="Buchungen generieren" Command="{Binding GenerateCommand}"/>
