@@ -1,3 +1,4 @@
+using System.Globalization;
 using VedaMatrix.Models;
 
 namespace VedaMatrix.Services;
@@ -20,7 +21,6 @@ public class MatrixEngine
     {
         var matches = FindMatching(selections).ToList();
         if (matches.Count == 0) return null;
-        // Prefer exact match with most conditions
         return matches.OrderByDescending(m => m.Conditions.Count).First();
     }
 
@@ -40,7 +40,8 @@ public class MatrixEngine
         Procedure procedure,
         Dictionary<string, string> times)
     {
-        var result = new List<(string, string, string?)>();
+        var result = new List<(string Action, string Time, string? Comment)>();
+
         foreach (var step in procedure.Steps)
         {
             string timeValue;
@@ -50,7 +51,7 @@ public class MatrixEngine
             }
             else if (!string.IsNullOrEmpty(step.TimeKey) && times.TryGetValue(step.TimeKey, out var t) && !string.IsNullOrWhiteSpace(t))
             {
-                timeValue = t;
+                timeValue = t.Trim();
             }
             else
             {
@@ -59,6 +60,146 @@ public class MatrixEngine
 
             result.Add((step.Action, timeValue, step.Comment));
         }
+
+        // Apply +1 minute collision resolution
+        ApplyMinuteCollisions(result);
+
         return result;
+    }
+
+    /// <summary>
+    /// If two consecutive bookings share the same timestamp, the later one
+    /// (and any subsequent ones that collide) are shifted by +1 minute.
+    /// Typical cases: Kommen → Dienstgang Beginn at same clock time,
+    /// or return + immediate leave.
+    /// </summary>
+    private static void ApplyMinuteCollisions(List<(string Action, string Time, string? Comment)> bookings)
+    {
+        TimeSpan? lastTime = null;
+
+        for (int i = 0; i < bookings.Count; i++)
+        {
+            var (action, timeStr, comment) = bookings[i];
+
+            if (!TryParseTime(timeStr, out var current))
+            {
+                lastTime = null;
+                continue;
+            }
+
+            if (lastTime.HasValue && current <= lastTime.Value)
+            {
+                // Shift this and all following identical/earlier times by +1 min from previous
+                current = lastTime.Value.Add(TimeSpan.FromMinutes(1));
+                var adjusted = FormatTime(current);
+                var note = string.IsNullOrEmpty(comment)
+                    ? "+1 Min (Kollisionsvermeidung)"
+                    : comment + "  ·  +1 Min (Kollisionsvermeidung)";
+                bookings[i] = (action, adjusted, note);
+            }
+
+            lastTime = current;
+        }
+    }
+
+    public static bool TryParseTime(string? text, out TimeSpan time)
+    {
+        time = default;
+        if (string.IsNullOrWhiteSpace(text) || text == "—") return false;
+
+        text = text.Trim().Replace('.', ':');
+
+        // Accept H:mm, HH:mm, H:mm:ss
+        if (TimeSpan.TryParseExact(text, new[] { @"h\:mm", @"hh\:mm", @"h\:mm\:ss", @"hh\:mm\:ss" },
+                CultureInfo.InvariantCulture, out time))
+            return true;
+
+        if (TimeSpan.TryParse(text, CultureInfo.InvariantCulture, out time))
+            return true;
+
+        return false;
+    }
+
+    public static string FormatTime(TimeSpan t)
+        => $"{(int)t.TotalHours:D2}:{t.Minutes:D2}";
+
+    /// <summary>
+    /// Calculates worked time from a sequence of bookings.
+    /// Simple model: pairs of "start-like" → "end-like" actions accumulate duration.
+    /// Pause (Gehen → Kommen or Mob.Ende → Mob.Beginn around midday) is excluded.
+    /// </summary>
+    public WorkTimeSummary CalculateWorkTime(
+        List<(string Action, string Time, string? Comment)> bookings,
+        TimeSpan sollzeit)
+    {
+        var summary = new WorkTimeSummary { Sollzeit = sollzeit };
+
+        var intervals = new List<(TimeSpan Start, TimeSpan End)>();
+        TimeSpan? openStart = null;
+
+        foreach (var (action, timeStr, _) in bookings)
+        {
+            if (!TryParseTime(timeStr, out var t)) continue;
+
+            var isStart = IsStartAction(action);
+            var isEnd = IsEndAction(action);
+
+            if (isStart)
+            {
+                openStart = t;
+            }
+            else if (isEnd && openStart.HasValue)
+            {
+                if (t > openStart.Value)
+                    intervals.Add((openStart.Value, t));
+                openStart = null;
+            }
+        }
+
+        // Sum
+        var total = TimeSpan.Zero;
+        foreach (var (s, e) in intervals)
+            total += e - s;
+
+        summary.Gearbeitet = total;
+        summary.Differenz = total - sollzeit;
+        summary.Exceeds10h = total > TimeSpan.FromHours(10);
+        summary.Intervals = intervals;
+
+        return summary;
+    }
+
+    private static bool IsStartAction(string action) =>
+        action.Contains("Kommen", StringComparison.OrdinalIgnoreCase) ||
+        action.Contains("Beginn", StringComparison.OrdinalIgnoreCase) ||
+        action.Equals("Mob. Arbeiten Beginn", StringComparison.OrdinalIgnoreCase) ||
+        action.Equals("Fortbildung Beginn", StringComparison.OrdinalIgnoreCase);
+
+    private static bool IsEndAction(string action) =>
+        action.Contains("Gehen", StringComparison.OrdinalIgnoreCase) ||
+        action.Contains("Ende", StringComparison.OrdinalIgnoreCase) ||
+        action.Equals("Mob. Arbeiten Ende", StringComparison.OrdinalIgnoreCase) ||
+        action.Equals("Dienstgang (Ende außerhalb)", StringComparison.OrdinalIgnoreCase) ||
+        action.Equals("Fortbildung Ende", StringComparison.OrdinalIgnoreCase);
+}
+
+public class WorkTimeSummary
+{
+    public TimeSpan Gearbeitet { get; set; }
+    public TimeSpan Sollzeit { get; set; }
+    public TimeSpan Differenz { get; set; }
+    public bool Exceeds10h { get; set; }
+    public List<(TimeSpan Start, TimeSpan End)> Intervals { get; set; } = new();
+
+    public string GearbeitetText => MatrixEngine.FormatTime(Gearbeitet);
+    public string SollzeitText => MatrixEngine.FormatTime(Sollzeit);
+    public string DifferenzText
+    {
+        get
+        {
+            var sign = Differenz >= TimeSpan.Zero ? "+" : "−";
+            var abs = Differenz.Duration();
+            return $"{sign}{MatrixEngine.FormatTime(abs)}";
+        }
     }
 }

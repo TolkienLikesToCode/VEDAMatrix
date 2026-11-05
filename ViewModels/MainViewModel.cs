@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using VedaMatrix.Models;
@@ -12,7 +13,6 @@ public partial class MainViewModel : ObservableObject
     private readonly MatrixEngine _engine;
     private readonly ProcedureConfig _config;
 
-    // Collections must be created BEFORE any property setters that call UpdateMatches()
     public ObservableCollection<string> OrtBeginnOptions { get; } = new() { "Dienststätte", "Wohnort", "Einsatzort", "Fortbildungsort" };
     public ObservableCollection<string> PauseOptions { get; } = new() { "Ja", "Nein" };
     public ObservableCollection<string> DienstgangOptions { get; } = new() { "Ja", "Nein" };
@@ -48,7 +48,8 @@ public partial class MainViewModel : ObservableObject
             _engine = new MatrixEngine(Array.Empty<Procedure>());
         }
 
-        // Defaults – collections already exist, so UpdateMatches is safe
+        SollzeitText = "07:48";
+
         SelectedOrtBeginn = "Dienststätte";
         SelectedPause = "Ja";
         SelectedDienstgang = "Nein";
@@ -74,7 +75,7 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty] private string? selectedZusatzMobil;
     [ObservableProperty] private string? selectedDienstreise;
 
-    // Visibility flags
+    // Visibility
     [ObservableProperty] private bool showDienstgangDetails;
     [ObservableProperty] private bool showDienstgangOrt;
     [ObservableProperty] private bool showOrtEnde;
@@ -87,13 +88,20 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty] private string? attentionNote;
     [ObservableProperty] private string statusMessage = "Bitte Auswahl treffen und Zeiten eingeben.";
 
+    // Sollzeit + Summary
+    [ObservableProperty] private string sollzeitText = "07:48";
+    [ObservableProperty] private string summaryGearbeitet = "—";
+    [ObservableProperty] private string summarySollzeit = "07:48";
+    [ObservableProperty] private string summaryDifferenz = "—";
+    [ObservableProperty] private string summaryWarning = "";
+    [ObservableProperty] private bool showSummaryWarning;
+
     partial void OnSelectedOrtBeginnChanged(string? value)
     {
         if (value == "Wohnort" || value == "Fortbildungsort")
             SelectedOrtEnde = "Wohnort";
         else if (value == "Dienststätte" || value == "Einsatzort")
             SelectedOrtEnde = "Dienststätte";
-
         UpdateVisibility();
         UpdateMatches();
     }
@@ -141,7 +149,6 @@ public partial class MainViewModel : ObservableObject
 
     private void UpdateMatches()
     {
-        // Guard – should never be null now, but keep safe
         if (MatchingProcedures is null || _engine is null) return;
 
         var selections = BuildSelections();
@@ -197,6 +204,13 @@ public partial class MainViewModel : ObservableObject
         _ => "08:00"
     };
 
+    private TimeSpan ParseSollzeit()
+    {
+        if (MatrixEngine.TryParseTime(SollzeitText, out var ts))
+            return ts;
+        return new TimeSpan(7, 48, 0);
+    }
+
     [RelayCommand]
     private void Generate()
     {
@@ -222,9 +236,23 @@ public partial class MainViewModel : ObservableObject
             });
         }
 
-        StatusMessage = $"Buchungssequenz generiert ({bookings.Count} Schritte).";
+        // Summary
+        var soll = ParseSollzeit();
+        var summary = _engine.CalculateWorkTime(bookings, soll);
+
+        SummaryGearbeitet = summary.GearbeitetText;
+        SummarySollzeit = summary.SollzeitText;
+        SummaryDifferenz = summary.DifferenzText;
+        ShowSummaryWarning = summary.Exceeds10h;
+        SummaryWarning = summary.Exceeds10h
+            ? "⚠ Arbeitszeit überschreitet die 10-Stunden-Grenze!"
+            : "";
+
+        StatusMessage = $"Buchungssequenz generiert ({bookings.Count} Schritte). Gearbeitet: {summary.GearbeitetText}";
         if (SelectedProcedure.RequiresBewegungsantrag)
-            StatusMessage += " ⚠ Bewegungsantrag ggf. erforderlich.";
+            StatusMessage += "  ·  Bewegungsantrag ggf. erforderlich.";
+        if (summary.Exceeds10h)
+            StatusMessage += "  ·  10h-Limit überschritten.";
     }
 
     [RelayCommand]
@@ -239,7 +267,13 @@ public partial class MainViewModel : ObservableObject
         SelectedMitarbeiterTyp = "Angestellte";
         SelectedZusatzMobil = "Nein";
         SelectedDienstreise = "Nein";
+        SollzeitText = "07:48";
         BookingResults.Clear();
+        SummaryGearbeitet = "—";
+        SummarySollzeit = "07:48";
+        SummaryDifferenz = "—";
+        SummaryWarning = "";
+        ShowSummaryWarning = false;
         StatusMessage = "Zurückgesetzt.";
     }
 }
