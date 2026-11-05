@@ -11,6 +11,8 @@ Native C# Desktop-Anwendung (.NET 10 / Avalonia) zur Generierung von Buchungsvor
 - **Konfigurierbar** über `Config/procedures.json` (Building-Block-System)
 - Alle 12 Prozeduren als JSON-Bausteine hinterlegt
 
+**Autor** Lenny Kunz
+
 ## Build (macOS)
 
 ```bash
