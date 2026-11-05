@@ -1,5 +1,8 @@
 using System;
 using Avalonia.Controls;
+using Avalonia.Interactivity;
+using VedaMatrix.ViewModels;
+using VedaMatrix.Views;
 
 namespace VedaMatrix;
 
@@ -21,5 +24,16 @@ public partial class MainWindow : Window
             Console.ResetColor();
             throw;
         }
+    }
+
+    private async void OnOpenTemplateDialog(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is not MainViewModel vm) return;
+
+        var dialog = new TemplateDialog(vm.ProcedureTemplates, vm.SelectedTemplate);
+        var result = await dialog.ShowDialog<Models.Procedure?>(this);
+
+        if (result != null)
+            vm.SelectedTemplate = result;
     }
 }

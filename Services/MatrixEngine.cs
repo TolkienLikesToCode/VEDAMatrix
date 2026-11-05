@@ -13,9 +13,7 @@ public class MatrixEngine
     }
 
     public IEnumerable<Procedure> FindMatching(Dictionary<string, string> selections)
-    {
-        return _procedures.Where(p => Matches(p, selections));
-    }
+        => _procedures.Where(p => Matches(p, selections));
 
     public Procedure? FindBestMatch(Dictionary<string, string> selections)
     {
@@ -36,45 +34,6 @@ public class MatrixEngine
         return true;
     }
 
-    /// <summary>
-    /// Returns all values for <paramref name="dimension"/> that still leave
-    /// at least one matching procedure when combined with the other current selections.
-    /// </summary>
-    public List<string> GetValidValues(string dimension, Dictionary<string, string> currentSelections, IEnumerable<string> allPossible)
-    {
-        var valid = new List<string>();
-        foreach (var candidate in allPossible)
-        {
-            var test = new Dictionary<string, string>(currentSelections, StringComparer.OrdinalIgnoreCase)
-            {
-                [dimension] = candidate
-            };
-
-            // A value is valid if ANY procedure is still compatible
-            // (procedure conditions that are present in test must match;
-            //  missing keys in the procedure are fine – partial match)
-            if (_procedures.Any(p => IsCompatible(p, test)))
-                valid.Add(candidate);
-        }
-        return valid;
-    }
-
-    /// <summary>
-    /// Soft match: every key that exists in BOTH the procedure conditions AND the selections must agree.
-    /// Keys only in the procedure (not yet selected) are ignored.
-    /// </summary>
-    private static bool IsCompatible(Procedure procedure, Dictionary<string, string> selections)
-    {
-        foreach (var (key, expected) in procedure.Conditions)
-        {
-            if (!selections.TryGetValue(key, out var actual))
-                continue; // not yet chosen – still possible
-            if (!string.Equals(actual, expected, StringComparison.OrdinalIgnoreCase))
-                return false;
-        }
-        return true;
-    }
-
     public List<(string Action, string Time, string? Comment)> GenerateBookings(
         Procedure procedure,
         Dictionary<string, string> times)
@@ -85,17 +44,11 @@ public class MatrixEngine
         {
             string timeValue;
             if (!string.IsNullOrEmpty(step.FixedTime))
-            {
                 timeValue = step.FixedTime;
-            }
             else if (!string.IsNullOrEmpty(step.TimeKey) && times.TryGetValue(step.TimeKey, out var t) && !string.IsNullOrWhiteSpace(t))
-            {
                 timeValue = t.Trim();
-            }
             else
-            {
                 timeValue = "—";
-            }
 
             result.Add((step.Action, timeValue, step.Comment));
         }
@@ -143,67 +96,87 @@ public class MatrixEngine
                 CultureInfo.InvariantCulture, out time))
             return true;
 
-        if (TimeSpan.TryParse(text, CultureInfo.InvariantCulture, out time))
-            return true;
-
-        return false;
+        return TimeSpan.TryParse(text, CultureInfo.InvariantCulture, out time);
     }
 
     public static string FormatTime(TimeSpan t)
         => $"{(int)t.TotalHours:D2}:{t.Minutes:D2}";
 
+    /// <summary>
+    /// Working time = everything that is not a pause.
+    /// Dienstgang, Fortbildung, mobiles Arbeiten, normal office time all count.
+    /// Only explicit pause intervals (Gehen→Kommen / Mob.Ende→Mob.Beginn in the middle of the day) are subtracted.
+    /// </summary>
     public WorkTimeSummary CalculateWorkTime(
         List<(string Action, string Time, string? Comment)> bookings,
         TimeSpan sollzeit)
     {
         var summary = new WorkTimeSummary { Sollzeit = sollzeit };
 
-        var intervals = new List<(TimeSpan Start, TimeSpan End)>();
-        TimeSpan? openStart = null;
-
+        // Collect timed events in order
+        var events = new List<(TimeSpan Time, string Action)>();
         foreach (var (action, timeStr, _) in bookings)
         {
-            if (!TryParseTime(timeStr, out var t)) continue;
-
-            var isStart = IsStartAction(action);
-            var isEnd = IsEndAction(action);
-
-            if (isStart)
-            {
-                openStart = t;
-            }
-            else if (isEnd && openStart.HasValue)
-            {
-                if (t > openStart.Value)
-                    intervals.Add((openStart.Value, t));
-                openStart = null;
-            }
+            if (TryParseTime(timeStr, out var t))
+                events.Add((t, action));
         }
 
-        var total = TimeSpan.Zero;
-        foreach (var (s, e) in intervals)
-            total += e - s;
+        if (events.Count == 0)
+            return summary;
 
-        summary.Gearbeitet = total;
-        summary.Differenz = total - sollzeit;
-        summary.Exceeds10h = total > TimeSpan.FromHours(10);
-        summary.Intervals = intervals;
+        // Day span: first → last timestamp
+        var dayStart = events[0].Time;
+        var dayEnd = events[^1].Time;
+        if (dayEnd < dayStart)
+            return summary; // invalid
+
+        var daySpan = dayEnd - dayStart;
+
+        // Pause intervals: end-of-presence followed by resume, not the final end-of-day
+        // Pause start: Gehen, Mob. Arbeiten Ende
+        // Pause end (resume): Kommen, Mob. Arbeiten Beginn, Dienstgang Beginn (after pause at Schulung)
+        var pauseTotal = TimeSpan.Zero;
+        var pauseIntervals = new List<(TimeSpan Start, TimeSpan End)>();
+
+        for (int i = 0; i < events.Count - 1; i++)
+        {
+            var (t1, a1) = events[i];
+            var (t2, a2) = events[i + 1];
+
+            if (!IsPauseStart(a1)) continue;
+            if (!IsPauseResume(a2)) continue;
+
+            // Skip if this Gehen/Mob.Ende is the last event overall (end of day)
+            // Already guarded by i < Count-1, but also skip if no real resume work after
+            if (t2 <= t1) continue;
+
+            pauseTotal += t2 - t1;
+            pauseIntervals.Add((t1, t2));
+        }
+
+        var worked = daySpan - pauseTotal;
+        if (worked < TimeSpan.Zero)
+            worked = TimeSpan.Zero;
+
+        summary.Gearbeitet = worked;
+        summary.Differenz = worked - sollzeit;
+        summary.Exceeds10h = worked > TimeSpan.FromHours(10);
+        summary.Intervals = pauseIntervals; // for transparency: these are the excluded pauses
+        summary.PauseTotal = pauseTotal;
+        summary.DayStart = dayStart;
+        summary.DayEnd = dayEnd;
 
         return summary;
     }
 
-    private static bool IsStartAction(string action) =>
-        action.Contains("Kommen", StringComparison.OrdinalIgnoreCase) ||
-        action.Contains("Beginn", StringComparison.OrdinalIgnoreCase) ||
-        action.Equals("Mob. Arbeiten Beginn", StringComparison.OrdinalIgnoreCase) ||
-        action.Equals("Fortbildung Beginn", StringComparison.OrdinalIgnoreCase);
+    private static bool IsPauseStart(string action) =>
+        action.Equals("Gehen", StringComparison.OrdinalIgnoreCase) ||
+        action.Equals("Mob. Arbeiten Ende", StringComparison.OrdinalIgnoreCase);
 
-    private static bool IsEndAction(string action) =>
-        action.Contains("Gehen", StringComparison.OrdinalIgnoreCase) ||
-        action.Contains("Ende", StringComparison.OrdinalIgnoreCase) ||
-        action.Equals("Mob. Arbeiten Ende", StringComparison.OrdinalIgnoreCase) ||
-        action.Equals("Dienstgang (Ende außerhalb)", StringComparison.OrdinalIgnoreCase) ||
-        action.Equals("Fortbildung Ende", StringComparison.OrdinalIgnoreCase);
+    private static bool IsPauseResume(string action) =>
+        action.Equals("Kommen", StringComparison.OrdinalIgnoreCase) ||
+        action.Equals("Mob. Arbeiten Beginn", StringComparison.OrdinalIgnoreCase) ||
+        action.Equals("Dienstgang Beginn", StringComparison.OrdinalIgnoreCase);
 }
 
 public class WorkTimeSummary
@@ -211,11 +184,15 @@ public class WorkTimeSummary
     public TimeSpan Gearbeitet { get; set; }
     public TimeSpan Sollzeit { get; set; }
     public TimeSpan Differenz { get; set; }
+    public TimeSpan PauseTotal { get; set; }
+    public TimeSpan DayStart { get; set; }
+    public TimeSpan DayEnd { get; set; }
     public bool Exceeds10h { get; set; }
     public List<(TimeSpan Start, TimeSpan End)> Intervals { get; set; } = new();
 
     public string GearbeitetText => MatrixEngine.FormatTime(Gearbeitet);
     public string SollzeitText => MatrixEngine.FormatTime(Sollzeit);
+    public string PauseText => MatrixEngine.FormatTime(PauseTotal);
     public string DifferenzText
     {
         get

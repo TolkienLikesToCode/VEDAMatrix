@@ -105,6 +105,7 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty] private string summaryGearbeitet = "—";
     [ObservableProperty] private string summarySollzeit = "07:48";
     [ObservableProperty] private string summaryDifferenz = "—";
+    [ObservableProperty] private string summaryPause = "—";
     [ObservableProperty] private string summaryWarning = "";
     [ObservableProperty] private bool showSummaryWarning;
 
@@ -313,6 +314,7 @@ public partial class MainViewModel : ObservableObject
         SummaryGearbeitet = summary.GearbeitetText;
         SummarySollzeit = summary.SollzeitText;
         SummaryDifferenz = summary.DifferenzText;
+        SummaryPause = summary.PauseText;
         ShowSummaryWarning = summary.Exceeds10h;
         SummaryWarning = summary.Exceeds10h
             ? "⚠ Arbeitszeit überschreitet die 10-Stunden-Grenze!"
@@ -345,6 +347,7 @@ public partial class MainViewModel : ObservableObject
         SummaryGearbeitet = "—";
         SummarySollzeit = "07:48";
         SummaryDifferenz = "—";
+        SummaryPause = "—";
         SummaryWarning = "";
         ShowSummaryWarning = false;
 

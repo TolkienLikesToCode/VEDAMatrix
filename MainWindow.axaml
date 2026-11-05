@@ -4,8 +4,8 @@
         x:Class="VedaMatrix.MainWindow"
         x:DataType="vm:MainViewModel"
         Title="VEDA Matrix"
-        Width="1100" Height="840"
-        MinWidth="900" MinHeight="640"
+        Width="1000" Height="820"
+        MinWidth="820" MinHeight="640"
         WindowStartupLocation="CenterScreen"
         Background="#FFFFFF"
         FontFamily="Inter, Segoe UI, Helvetica, Arial, sans-serif"
@@ -17,38 +17,26 @@
 
   <Grid Margin="20" RowDefinitions="Auto,*,Auto">
     <!-- Header -->
-    <StackPanel Grid.Row="0" Spacing="4" Margin="0,0,0,16">
-      <TextBlock Text="VEDA MATRIX" FontSize="22" FontWeight="Bold" Foreground="#111111"/>
-      <TextBlock Text="Buchungsvorgänge im Veda Horizon – Vorlagen &amp; Entscheidungsmatrix" Foreground="#555555"/>
-    </StackPanel>
+    <DockPanel Grid.Row="0" Margin="0,0,0,16">
+      <StackPanel Spacing="4">
+        <TextBlock Text="VEDA MATRIX" FontSize="22" FontWeight="Bold" Foreground="#111111"/>
+        <TextBlock Text="Buchungsvorgänge im Veda Horizon – Entscheidungsmatrix" Foreground="#555555"/>
+      </StackPanel>
+      <Button DockPanel.Dock="Right"
+              Content="Vorlage wählen…"
+              HorizontalAlignment="Right"
+              VerticalAlignment="Center"
+              Click="OnOpenTemplateDialog"
+              Background="#111111"
+              Foreground="#FFFFFF"
+              Padding="16,8"/>
+    </DockPanel>
 
-    <!-- Main content: templates | details+times | results -->
-    <Grid Grid.Row="1" ColumnDefinitions="280,300,*" ColumnSpacing="16">
+    <!-- Main content: params | results -->
+    <Grid Grid.Row="1" ColumnDefinitions="340,*" ColumnSpacing="20">
 
-      <!-- ── Column 1: Template list ── -->
-      <Border Grid.Column="0" Classes="card">
-        <Grid RowDefinitions="Auto,*">
-          <TextBlock Grid.Row="0" Text="VORLAGEN" FontWeight="Bold" FontSize="12" LetterSpacing="1" Margin="0,0,0,10"/>
-          <ListBox Grid.Row="1"
-                   ItemsSource="{Binding ProcedureTemplates}"
-                   SelectedItem="{Binding SelectedTemplate}"
-                   Background="Transparent"
-                   BorderThickness="0">
-            <ListBox.ItemTemplate>
-              <DataTemplate>
-                <StackPanel Spacing="2" Margin="0,4">
-                  <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextWrapping="Wrap" FontSize="12"/>
-                  <TextBlock Text="{Binding Description}" Foreground="#666666" TextWrapping="Wrap" FontSize="11"/>
-                  <TextBlock Text="{Binding Category}" Foreground="#999999" FontSize="10" Margin="0,2,0,0"/>
-                </StackPanel>
-              </DataTemplate>
-            </ListBox.ItemTemplate>
-          </ListBox>
-        </Grid>
-      </Border>
-
-      <!-- ── Column 2: Selection details + times ── -->
-      <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto">
+      <!-- Left: params + times -->
+      <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto">
         <StackPanel Spacing="12">
 
           <Border Classes="card">
@@ -62,7 +50,7 @@
 
           <Border Classes="card">
             <StackPanel Spacing="10">
-              <TextBlock Text="PARAMETER (optional anpassen)" FontWeight="Bold" FontSize="12" LetterSpacing="1"/>
+              <TextBlock Text="PARAMETER" FontWeight="Bold" FontSize="12" LetterSpacing="1"/>
 
               <TextBlock Text="Arbeitsbeginn Ort" FontSize="11" Foreground="#555555"/>
               <ComboBox ItemsSource="{Binding OrtBeginnOptions}" SelectedItem="{Binding SelectedOrtBeginn}" HorizontalAlignment="Stretch"/>
@@ -130,8 +118,8 @@
         </StackPanel>
       </ScrollViewer>
 
-      <!-- ── Column 3: Results ── -->
-      <Border Grid.Column="2" Classes="card">
+      <!-- Right: results -->
+      <Border Grid.Column="1" Classes="card">
         <Grid RowDefinitions="Auto,*,Auto,Auto">
           <TextBlock Grid.Row="0" Text="BUCHUNGSSEQUENZ" FontWeight="Bold" FontSize="12" LetterSpacing="1" Margin="0,0,0,12"/>
 
@@ -161,9 +149,11 @@
                 <TextBlock Grid.Column="2" Text="Sollzeit" Foreground="#555555"/>
                 <TextBlock Grid.Column="3" Text="{Binding SummarySollzeit}" FontWeight="SemiBold"/>
               </Grid>
-              <Grid ColumnDefinitions="120,80">
-                <TextBlock Text="Differenz" Foreground="#555555"/>
-                <TextBlock Grid.Column="1" Text="{Binding SummaryDifferenz}" FontWeight="SemiBold"/>
+              <Grid ColumnDefinitions="120,80,120,80">
+                <TextBlock Text="Pause" Foreground="#555555"/>
+                <TextBlock Grid.Column="1" Text="{Binding SummaryPause}" FontWeight="SemiBold"/>
+                <TextBlock Grid.Column="2" Text="Differenz" Foreground="#555555"/>
+                <TextBlock Grid.Column="3" Text="{Binding SummaryDifferenz}" FontWeight="SemiBold"/>
               </Grid>
               <TextBlock Text="{Binding SummaryWarning}"
                          IsVisible="{Binding ShowSummaryWarning}"
