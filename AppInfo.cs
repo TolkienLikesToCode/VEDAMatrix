@@ -14,16 +14,16 @@ public static class AppInfo
     public const string Name = "VEDA Matrix";
 
     /// <summary>Semantic version string.</summary>
-    public const string Version = "1.0.0";
+    public const string Version = "0.0.1";
 
     /// <summary>Author / organization responsible for this tool.</summary>
-    public const string Author = "eGovernment";
+    public const string Author = "Lenny Kunz";
 
     /// <summary>Short product description (German UI).</summary>
     public const string Description = "Buchungsvorgänge im Veda Horizon – Entscheidungsmatrix";
-yzzzy
+
     /// <summary>Copyright notice.</summary>
-    public const string Copyright = "© 2026 eGovernment";
+    public const string Copyright = "© 2026 Lenny Kunz";
 
     /// <summary>Company or publisher name.</summary>
     public const string Company = "eGovernment";
