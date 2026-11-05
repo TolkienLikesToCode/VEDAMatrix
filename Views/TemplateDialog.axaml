@@ -30,7 +30,7 @@
     </ListBox>
 
     <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="12" Margin="0,16,0,0">
-      <Button Content="Abbrechen" Click="OnCancel" Background="#FFFFFF" Foreground="#111111" BorderBrush="#111111"/>
+      <Button Content="Abbrechen" Click="OnCancel" Classes="secondary"/>
       <Button Content="Übernehmen" Click="OnConfirm" x:Name="ConfirmButton"/>
     </StackPanel>
   </Grid>

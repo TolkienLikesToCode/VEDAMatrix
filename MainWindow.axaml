@@ -4,6 +4,7 @@
         x:Class="VedaMatrix.MainWindow"
         x:DataType="vm:MainViewModel"
         Title="VEDA Matrix"
+        Icon="/Assets/app.ico"
         Width="1000" Height="820"
         MinWidth="820" MinHeight="640"
         WindowStartupLocation="CenterScreen"
@@ -18,18 +19,19 @@
   <Grid Margin="20" RowDefinitions="Auto,*,Auto">
     <!-- Header -->
     <DockPanel Grid.Row="0" Margin="0,0,0,16">
-      <StackPanel Spacing="4">
-        <TextBlock Text="VEDA MATRIX" FontSize="22" FontWeight="Bold" Foreground="#111111"/>
-        <TextBlock Text="Buchungsvorgänge im Veda Horizon – Entscheidungsmatrix" Foreground="#555555"/>
-      </StackPanel>
       <Button DockPanel.Dock="Right"
               Content="Vorlage wählen…"
               HorizontalAlignment="Right"
               VerticalAlignment="Center"
               Click="OnOpenTemplateDialog"
-              Background="#111111"
-              Foreground="#FFFFFF"
               Padding="16,8"/>
+      <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+        <Image Source="/Assets/app-32.png" Width="32" Height="32" VerticalAlignment="Center"/>
+        <StackPanel Spacing="2" VerticalAlignment="Center">
+          <TextBlock Text="VEDA MATRIX" FontSize="22" FontWeight="Bold" Foreground="#111111"/>
+          <TextBlock Text="Buchungsvorgänge im Veda Horizon – Entscheidungsmatrix" Foreground="#555555"/>
+        </StackPanel>
+      </StackPanel>
     </DockPanel>
 
     <!-- Main content: params | results -->
@@ -170,7 +172,7 @@
 
     <!-- Footer -->
     <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="12" Margin="0,16,0,0" HorizontalAlignment="Right">
-      <Button Content="Zurücksetzen" Command="{Binding ResetCommand}" Background="#FFFFFF" Foreground="#111111" BorderBrush="#111111"/>
+      <Button Content="Zurücksetzen" Command="{Binding ResetCommand}" Classes="secondary"/>
       <Button Content="Buchungen generieren" Command="{Binding GenerateCommand}"/>
     </StackPanel>
   </Grid>
