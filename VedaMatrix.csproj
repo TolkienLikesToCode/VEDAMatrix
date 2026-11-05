@@ -22,7 +22,9 @@
     <FileVersion>1.0.0.0</FileVersion>
     <InformationalVersion>1.0.0</InformationalVersion>
     <NeutralLanguage>de-DE</NeutralLanguage>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <!-- Author/product metadata is in csproj + Properties/AssemblyInfo.cs + AppInfo.cs -->
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
     <!-- Assembly attributes live in Properties/AssemblyInfo.cs -->
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <PackageId>VedaMatrix</PackageId>
