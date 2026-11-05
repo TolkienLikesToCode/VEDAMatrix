@@ -31,28 +31,17 @@
       "Category": "Dienststätte",
       "Conditions": {
         "OrtBeginn": "Dienststätte",
-        "Pause": "Ja",
         "Dienstgang": "Nein",
         "OrtEnde": "Dienststätte"
       },
       "RequiredTimeFields": [
         "Arbeitsbeginn",
-        "PauseBeginn",
-        "PauseEnde",
         "Arbeitsende"
       ],
       "Steps": [
         {
           "Action": "Kommen",
           "TimeKey": "Arbeitsbeginn"
-        },
-        {
-          "Action": "Gehen",
-          "TimeKey": "PauseBeginn"
-        },
-        {
-          "Action": "Kommen",
-          "TimeKey": "PauseEnde"
         },
         {
           "Action": "Gehen",
@@ -67,7 +56,6 @@
       "Category": "Dienststätte",
       "Conditions": {
         "OrtBeginn": "Dienststätte",
-        "Pause": "Ja",
         "Dienstgang": "Ja",
         "DienstgangOrt": "Gleicher Ort",
         "DienstgangEndeTyp": "Rückkehr",
@@ -76,8 +64,6 @@
       "RequiredTimeFields": [
         "Arbeitsbeginn",
         "DienstgangStart",
-        "PauseBeginn",
-        "PauseEnde",
         "DienstgangEnde",
         "Arbeitsende"
       ],
@@ -89,20 +75,6 @@
         {
           "Action": "Dienstgang Beginn",
           "TimeKey": "DienstgangStart"
-        },
-        {
-          "Action": "Gehen",
-          "TimeKey": "PauseBeginn",
-          "Comment": "Pause beginnt und endet am Standort der Schulung. → ggf. Korrektur über Bewegungsantrag"
-        },
-        {
-          "Action": "Kommen",
-          "TimeKey": "PauseEnde"
-        },
-        {
-          "Action": "Dienstgang Beginn",
-          "TimeKey": "PauseEnde",
-          "Comment": "Direkt nach Kommen"
         },
         {
           "Action": "Kommen",
@@ -123,7 +95,6 @@
       "Category": "Dienststätte",
       "Conditions": {
         "OrtBeginn": "Dienststätte",
-        "Pause": "Ja",
         "Dienstgang": "Ja",
         "DienstgangOrt": "Anderer Ort",
         "DienstgangEndeTyp": "Außerhalb"
@@ -131,8 +102,6 @@
       "RequiredTimeFields": [
         "Arbeitsbeginn",
         "DienstgangStart",
-        "PauseBeginn",
-        "PauseEnde",
         "DienstgangEnde"
       ],
       "Steps": [
@@ -143,20 +112,6 @@
         {
           "Action": "Dienstgang Beginn",
           "TimeKey": "DienstgangStart"
-        },
-        {
-          "Action": "Gehen",
-          "TimeKey": "PauseBeginn",
-          "Comment": "Pause beginnt und endet am Standort der Schulung. → ggf. Korrektur über Bewegungsantrag"
-        },
-        {
-          "Action": "Kommen",
-          "TimeKey": "PauseEnde"
-        },
-        {
-          "Action": "Dienstgang Beginn",
-          "TimeKey": "PauseEnde",
-          "Comment": "Direkt nach Kommen"
         },
         {
           "Action": "Dienstgang (Ende außerhalb)",
@@ -173,28 +128,17 @@
       "Category": "Mobiles Arbeiten",
       "Conditions": {
         "OrtBeginn": "Wohnort",
-        "Pause": "Ja",
         "Dienstgang": "Nein",
         "OrtEnde": "Wohnort"
       },
       "RequiredTimeFields": [
         "Arbeitsbeginn",
-        "PauseBeginn",
-        "PauseEnde",
         "Arbeitsende"
       ],
       "Steps": [
         {
           "Action": "Mob. Arbeiten Beginn",
           "TimeKey": "Arbeitsbeginn"
-        },
-        {
-          "Action": "Mob. Arbeiten Ende",
-          "TimeKey": "PauseBeginn"
-        },
-        {
-          "Action": "Mob. Arbeiten Beginn",
-          "TimeKey": "PauseEnde"
         },
         {
           "Action": "Mob. Arbeiten Ende",
@@ -209,14 +153,11 @@
       "Category": "Mobiles Arbeiten",
       "Conditions": {
         "OrtBeginn": "Wohnort",
-        "Pause": "Ja",
         "Dienstgang": "Ja",
         "DienstgangEndeTyp": "Rückkehr"
       },
       "RequiredTimeFields": [
         "Arbeitsbeginn",
-        "PauseBeginn",
-        "PauseEnde",
         "DienstgangStart",
         "DienstgangEnde",
         "Arbeitsende"
@@ -225,14 +166,6 @@
         {
           "Action": "Mob. Arbeiten Beginn",
           "TimeKey": "Arbeitsbeginn"
-        },
-        {
-          "Action": "Mob. Arbeiten Ende",
-          "TimeKey": "PauseBeginn"
-        },
-        {
-          "Action": "Mob. Arbeiten Beginn",
-          "TimeKey": "PauseEnde"
         },
         {
           "Action": "Dienstgang Beginn",
@@ -257,14 +190,11 @@
       "Category": "Mobiles Arbeiten",
       "Conditions": {
         "OrtBeginn": "Wohnort",
-        "Pause": "Ja",
         "Dienstgang": "Ja",
         "DienstgangEndeTyp": "Außerhalb"
       },
       "RequiredTimeFields": [
         "Arbeitsbeginn",
-        "PauseBeginn",
-        "PauseEnde",
         "DienstgangStart",
         "DienstgangEnde"
       ],
@@ -272,14 +202,6 @@
         {
           "Action": "Mob. Arbeiten Beginn",
           "TimeKey": "Arbeitsbeginn"
-        },
-        {
-          "Action": "Mob. Arbeiten Ende",
-          "TimeKey": "PauseBeginn"
-        },
-        {
-          "Action": "Mob. Arbeiten Beginn",
-          "TimeKey": "PauseEnde"
         },
         {
           "Action": "Dienstgang Beginn",
@@ -301,15 +223,12 @@
       "Category": "Gemischt",
       "Conditions": {
         "OrtBeginn": "Dienststätte",
-        "Pause": "Ja",
         "Dienstgang": "Ja",
         "DienstgangEndeTyp": "Außerhalb",
         "OrtEnde": "Wohnort"
       },
       "RequiredTimeFields": [
         "Arbeitsbeginn",
-        "PauseBeginn",
-        "PauseEnde",
         "DienstgangStart",
         "DienstgangEnde",
         "Arbeitsende"
@@ -318,14 +237,6 @@
         {
           "Action": "Kommen",
           "TimeKey": "Arbeitsbeginn"
-        },
-        {
-          "Action": "Gehen",
-          "TimeKey": "PauseBeginn"
-        },
-        {
-          "Action": "Kommen",
-          "TimeKey": "PauseEnde"
         },
         {
           "Action": "Dienstgang Beginn",
@@ -350,7 +261,6 @@
       "Category": "Gemischt",
       "Conditions": {
         "OrtBeginn": "Wohnort",
-        "Pause": "Ja",
         "Dienstgang": "Ja",
         "OrtEnde": "Wohnort",
         "ZusatzMobil": "Ja"
@@ -359,8 +269,6 @@
         "Arbeitsbeginn",
         "DienstgangStart",
         "DienstgangEnde",
-        "PauseBeginn",
-        "PauseEnde",
         "ArbeitsendeDienststaette",
         "ArbeitsbeginnMobil2",
         "Arbeitsende"
@@ -378,15 +286,6 @@
           "Action": "Kommen",
           "TimeKey": "DienstgangEnde",
           "Comment": "Ende Dienstgang an Dienststätte"
-        },
-        {
-          "Action": "Gehen",
-          "TimeKey": "PauseBeginn"
-        },
-        {
-          "Action": "Kommen",
-          "TimeKey": "PauseEnde",
-          "Comment": "Der Beschäftigte setzt seine Arbeit in der Dienststätte fort."
         },
         {
           "Action": "Gehen",
@@ -410,7 +309,6 @@
       "Category": "Dienststätte",
       "Conditions": {
         "OrtBeginn": "Dienststätte",
-        "Pause": "Ja",
         "Dienstgang": "Ja",
         "DienstgangOrt": "Anderer Ort",
         "DienstgangEndeTyp": "Rückkehr",
@@ -420,8 +318,6 @@
       "RequiredTimeFields": [
         "Arbeitsbeginn",
         "DienstgangStart",
-        "PauseBeginn",
-        "PauseEnde",
         "DienstgangEnde",
         "Arbeitsende"
       ],
@@ -433,20 +329,6 @@
         {
           "Action": "Dienstgang Beginn",
           "TimeKey": "DienstgangStart"
-        },
-        {
-          "Action": "Gehen",
-          "TimeKey": "PauseBeginn",
-          "Comment": "Pause beginnt und endet am Standort der Schulung. → ggf. Korrektur über Bewegungsantrag"
-        },
-        {
-          "Action": "Kommen",
-          "TimeKey": "PauseEnde"
-        },
-        {
-          "Action": "Dienstgang Beginn",
-          "TimeKey": "PauseEnde",
-          "Comment": "Direkt nach Kommen"
         },
         {
           "Action": "Kommen",
@@ -468,7 +350,6 @@
       "Category": "Einsatzort",
       "Conditions": {
         "OrtBeginn": "Einsatzort",
-        "Pause": "Ja",
         "Dienstgang": "Ja",
         "MitarbeiterTyp": "Angestellte",
         "DienstgangEndeTyp": "Außerhalb"
@@ -476,8 +357,6 @@
       "RequiredTimeFields": [
         "Arbeitsbeginn",
         "DienstgangStart",
-        "PauseBeginn",
-        "PauseEnde",
         "DienstgangEnde"
       ],
       "Steps": [
@@ -490,20 +369,6 @@
           "Action": "Dienstgang Beginn",
           "TimeKey": "DienstgangStart",
           "Comment": "→ ggf. Korrektur über Bewegungsantrag"
-        },
-        {
-          "Action": "Gehen",
-          "TimeKey": "PauseBeginn",
-          "Comment": "→ ggf. Korrektur über Bewegungsantrag"
-        },
-        {
-          "Action": "Kommen",
-          "TimeKey": "PauseEnde"
-        },
-        {
-          "Action": "Dienstgang Beginn",
-          "TimeKey": "PauseEnde",
-          "Comment": "Direkt nach Kommen"
         },
         {
           "Action": "Dienstgang (Ende außerhalb)",
@@ -521,7 +386,6 @@
       "Category": "Einsatzort",
       "Conditions": {
         "OrtBeginn": "Wohnort",
-        "Pause": "Ja",
         "Dienstgang": "Ja",
         "MitarbeiterTyp": "Beamte",
         "DienstgangEndeTyp": "Außerhalb"
@@ -529,8 +393,6 @@
       "RequiredTimeFields": [
         "Arbeitsbeginn",
         "DienstgangStart",
-        "PauseBeginn",
-        "PauseEnde",
         "DienstgangEnde"
       ],
       "Steps": [
@@ -543,20 +405,6 @@
           "Action": "Dienstgang Beginn",
           "TimeKey": "DienstgangStart",
           "Comment": "→ ggf. Korrektur über Bewegungsantrag"
-        },
-        {
-          "Action": "Gehen",
-          "TimeKey": "PauseBeginn",
-          "Comment": "→ ggf. Korrektur über Bewegungsantrag"
-        },
-        {
-          "Action": "Kommen",
-          "TimeKey": "PauseEnde"
-        },
-        {
-          "Action": "Dienstgang Beginn",
-          "TimeKey": "PauseEnde",
-          "Comment": "Direkt nach Kommen"
         },
         {
           "Action": "Dienstgang (Ende außerhalb)",
@@ -574,7 +422,6 @@
       "Category": "Fortbildung",
       "Conditions": {
         "OrtBeginn": "Fortbildungsort",
-        "Pause": "Nein",
         "Dienstgang": "Nein"
       },
       "RequiredTimeFields": [

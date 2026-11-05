@@ -115,21 +115,19 @@
                 <TextBlock Text="Sollarbeitszeit" VerticalAlignment="Center" FontSize="12" FontWeight="SemiBold"/>
                 <TextBox Grid.Column="1" Text="{Binding SollzeitText}" Watermark="07:48"/>
               </Grid>
-            </StackPanel>
-          </Border>
 
-          <Border Classes="card">
-            <StackPanel Spacing="8">
+              <Border Height="1" Background="#DDDDDD" Margin="0,8,0,4"/>
+
               <DockPanel>
                 <Button DockPanel.Dock="Right" Content="+ Pause" Click="OnAddPause" Padding="10,4" FontSize="12"/>
-                <TextBlock Text="ZUSÄTZLICHE PAUSEN" FontWeight="Bold" FontSize="12" LetterSpacing="1" VerticalAlignment="Center"/>
+                <TextBlock Text="Zusätzliche Pausen" FontWeight="SemiBold" FontSize="12" VerticalAlignment="Center"/>
               </DockPanel>
-              <TextBlock Text="Optional. Werden als Gehen/Kommen eingefügt und zählen nicht als Arbeitszeit."
+              <TextBlock Text="Optional · Gehen/Kommen · keine Arbeitszeit"
                          Foreground="#888888" FontSize="11" TextWrapping="Wrap"/>
               <ItemsControl ItemsSource="{Binding CustomPauses}">
                 <ItemsControl.ItemTemplate>
                   <DataTemplate>
-                    <DockPanel Margin="0,0,0,6">
+                    <DockPanel Margin="0,2,0,2">
                       <Button DockPanel.Dock="Right" Content="✕" Tag="{Binding}" Click="OnRemovePause"
                               Classes="secondary" Padding="8,2" FontSize="11"/>
                       <TextBlock Text="{Binding Display}" VerticalAlignment="Center" FontSize="12"/>
@@ -139,8 +137,7 @@
               </ItemsControl>
             </StackPanel>
           </Border>
-
-        </StackPanel>
+</StackPanel>
       </ScrollViewer>
 
       <!-- Right: results -->
@@ -203,7 +200,7 @@
         <Button Content="Zurücksetzen" Command="{Binding ResetCommand}" Classes="secondary"/>
         <Button Content="Buchungen generieren" Command="{Binding GenerateCommand}"/>
       </StackPanel>
-      <TextBlock Text="VEDA Matrix v1.0.0  ·  eGovernment  ·  © 2026 Lenny Kunz"
+      <TextBlock Text="VEDA Matrix v1.0.0  ·  eGovernment  ·  © 2026 eGovernment"
                  Foreground="#888888"
                  FontSize="11"
                  VerticalAlignment="Center"/>

@@ -259,6 +259,8 @@ public partial class MainViewModel : ObservableObject
                 Value = value ?? GetStaticDefault(key)
             });
         }
+
+        AdjustTimesForPauses();
     }
 
     /// <summary>
@@ -385,6 +387,50 @@ public partial class MainViewModel : ObservableObject
         if (summary.Exceeds10h)
             StatusMessage += "  ·  10h-Limit überschritten.";
     }
+
+    
+    /// <summary>
+    /// Pushes any time-field values that fall inside a custom pause
+    /// to (pause end + 1 minute). Later entries stay outside pause windows.
+    /// </summary>
+    public void AdjustTimesForPauses()
+    {
+        if (CustomPauses.Count == 0) return;
+
+        var pauses = new List<(TimeSpan Start, TimeSpan End)>();
+        foreach (var p in CustomPauses)
+        {
+            if (MatrixEngine.TryParseTime(p.Start, out var s) &&
+                MatrixEngine.TryParseTime(p.End, out var e) && e > s)
+                pauses.Add((s, e));
+        }
+        if (pauses.Count == 0) return;
+
+        pauses.Sort((a, b) => a.Start.CompareTo(b.Start));
+
+        foreach (var item in TimeInputs)
+        {
+            if (!MatrixEngine.TryParseTime(item.Value, out var t))
+                continue;
+
+            bool changed;
+            do
+            {
+                changed = false;
+                foreach (var (ps, pe) in pauses)
+                {
+                    // Inside pause (start inclusive, end exclusive) → push to end + 1 min
+                    if (t >= ps && t < pe)
+                    {
+                        t = pe.Add(TimeSpan.FromMinutes(1));
+                        item.Value = FormatTs(t);
+                        changed = true;
+                    }
+                }
+            } while (changed);
+        }
+    }
+
 
     [RelayCommand]
     private void RemovePause(PauseEntry? pause)

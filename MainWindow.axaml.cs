@@ -107,17 +107,24 @@ public partial class MainWindow : Window
     {
         if (DataContext is not MainViewModel vm) return;
         if (sender is Button { Tag: PauseEntry pause })
+        {
             vm.CustomPauses.Remove(pause);
+            vm.AdjustTimesForPauses();
+        }
     }
 
     private async void OnAddPause(object? sender, RoutedEventArgs e)
     {
         if (DataContext is not MainViewModel vm) return;
 
-        var dialog = new PauseDialog();
+        var dialog = new PauseDialog(vm.CustomPauses);
         var result = await dialog.ShowDialog<PauseEntry?>(this);
         if (result != null)
+        {
             vm.CustomPauses.Add(result);
+            vm.AdjustTimesForPauses();
+        }
     }
 }
+
 
