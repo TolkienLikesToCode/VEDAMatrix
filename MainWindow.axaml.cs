@@ -13,7 +13,7 @@ namespace VedaMatrix;
 /// Main application window: template selection, booking matrix, and time summary.
 /// </summary>
 /// <remarks>
-/// Author: eGovernment · © 2026 eGovernment
+/// Author: eGovernment · © 2026 Lenny Kunz
 /// </remarks>
 public partial class MainWindow : Window
 {
@@ -126,5 +126,3 @@ public partial class MainWindow : Window
         }
     }
 }
-
-

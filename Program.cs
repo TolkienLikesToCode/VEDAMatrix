@@ -7,7 +7,7 @@ namespace VedaMatrix;
 /// Application entry point for VEDA Matrix.
 /// </summary>
 /// <remarks>
-/// Author: eGovernment · © 2026 eGovernment
+/// Author: eGovernment · © 2026 Lenny Kunz
 /// </remarks>
 internal sealed class Program
 {

@@ -6,7 +6,7 @@ using System.Reflection;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("eGovernment")]
 [assembly: AssemblyProduct("VEDA Matrix")]
-[assembly: AssemblyCopyright("© 2026 eGovernment")]
+[assembly: AssemblyCopyright("© 2026 Lenny Kunz")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 [assembly: AssemblyVersion("1.0.0.0")]
