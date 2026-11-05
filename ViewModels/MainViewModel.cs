@@ -35,7 +35,6 @@ public partial class MainViewModel : ObservableObject
             _configService = new ConfigService();
             _config = _configService.Load();
             _engine = new MatrixEngine(_config.Procedures ?? new List<Procedure>());
-            Console.WriteLine($"[VM] {_config.Procedures?.Count ?? 0} Prozeduren geladen.");
         }
         catch (Exception ex)
         {

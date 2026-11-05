@@ -27,7 +27,6 @@ public class ConfigService
         string? found = null;
         foreach (var path in candidates)
         {
-            Console.WriteLine($"[Config] Prüfe: {path}");
             if (File.Exists(path))
             {
                 found = path;
@@ -37,13 +36,9 @@ public class ConfigService
 
         if (found is null)
         {
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine("[Config] WARNUNG: procedures.json nicht gefunden – verwende leere Konfiguration.");
-            Console.ResetColor();
             return new ProcedureConfig();
         }
 
-        Console.WriteLine($"[Config] Geladen: {found}");
         var json = File.ReadAllText(found);
         return JsonSerializer.Deserialize<ProcedureConfig>(json, Options)
                ?? new ProcedureConfig();

@@ -1,37 +1,29 @@
-using System;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 
 namespace VedaMatrix;
 
+/// <summary>
+/// Avalonia application root for VEDA Matrix.
+/// </summary>
+/// <remarks>
+/// Author: eGovernment · © 2026 eGovernment
+/// </remarks>
 public partial class App : Application
 {
+    /// <inheritdoc />
     public override void Initialize()
     {
-        Console.WriteLine("[App] Initialize...");
         AvaloniaXamlLoader.Load(this);
     }
 
+    /// <inheritdoc />
     public override void OnFrameworkInitializationCompleted()
     {
-        Console.WriteLine("[App] OnFrameworkInitializationCompleted...");
-
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            try
-            {
-                desktop.MainWindow = new MainWindow();
-                Console.WriteLine("[App] MainWindow erstellt.");
-            }
-            catch (Exception ex)
-            {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine("[App] FEHLER beim Erstellen des MainWindow:");
-                Console.WriteLine(ex);
-                Console.ResetColor();
-                throw;
-            }
+            desktop.MainWindow = new MainWindow();
         }
 
         base.OnFrameworkInitializationCompleted();

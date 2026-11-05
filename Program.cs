@@ -3,35 +3,27 @@ using Avalonia;
 
 namespace VedaMatrix;
 
+/// <summary>
+/// Application entry point for VEDA Matrix.
+/// </summary>
+/// <remarks>
+/// Author: eGovernment · © 2026 eGovernment
+/// </remarks>
 internal sealed class Program
 {
+    /// <summary>
+    /// Starts the Avalonia desktop application.
+    /// </summary>
+    /// <param name="args">Command-line arguments.</param>
     [STAThread]
     public static void Main(string[] args)
     {
-        try
-        {
-            Console.WriteLine("VEDA Matrix – Starte Anwendung...");
-            Console.WriteLine($"BaseDirectory : {AppContext.BaseDirectory}");
-            Console.WriteLine($"CurrentDir    : {Directory.GetCurrentDirectory()}");
-            Console.WriteLine();
-
-            BuildAvaloniaApp()
-                .StartWithClassicDesktopLifetime(args);
-        }
-        catch (Exception ex)
-        {
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine("========================================");
-            Console.WriteLine("FATALER FEHLER beim Start:");
-            Console.WriteLine(ex.ToString());
-            Console.WriteLine("========================================");
-            Console.ResetColor();
-            Console.WriteLine();
-            Console.WriteLine("Drücke Enter zum Beenden...");
-            Console.ReadLine();
-        }
+        BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
     }
 
+    /// <summary>
+    /// Configures the Avalonia <see cref="AppBuilder"/>.
+    /// </summary>
     public static AppBuilder BuildAvaloniaApp()
         => AppBuilder.Configure<App>()
             .UsePlatformDetect()
