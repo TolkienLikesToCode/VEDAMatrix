@@ -14,9 +14,25 @@ public partial class MainViewModel : ObservableObject
 
     public MainViewModel()
     {
-        _configService = new ConfigService();
-        _config = _configService.Load();
-        _engine = new MatrixEngine(_config.Procedures);
+        try
+        {
+            _configService = new ConfigService();
+            _config = _configService.Load();
+            _engine = new MatrixEngine(_config.Procedures ?? new List<Procedure>());
+
+            Console.WriteLine($"[VM] {_config.Procedures?.Count ?? 0} Prozeduren geladen.");
+        }
+        catch (Exception ex)
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine("[VM] Fehler beim Laden der Konfiguration:");
+            Console.WriteLine(ex);
+            Console.ResetColor();
+
+            _configService = new ConfigService();
+            _config = new ProcedureConfig();
+            _engine = new MatrixEngine(Array.Empty<Procedure>());
+        }
 
         // Dropdown options
         OrtBeginnOptions = new ObservableCollection<string> { "Dienststätte", "Wohnort", "Einsatzort", "Fortbildungsort" };
@@ -112,7 +128,7 @@ public partial class MainViewModel : ObservableObject
     {
         ShowDienstgangDetails = SelectedDienstgang == "Ja";
         ShowDienstgangOrt = SelectedDienstgang == "Ja" && SelectedOrtBeginn == "Dienststätte";
-        ShowOrtEnde = true; // immer anzeigen für präzises Matching
+        ShowOrtEnde = true;
         ShowMitarbeiterTyp = SelectedOrtBeginn == "Einsatzort" || (SelectedOrtBeginn == "Wohnort" && SelectedDienstgang == "Ja");
         ShowZusatzMobil = SelectedOrtBeginn == "Wohnort" && SelectedDienstgang == "Ja";
         ShowDienstreise = SelectedOrtBeginn == "Dienststätte" && SelectedDienstgang == "Ja" && SelectedDienstgangOrt == "Anderer Ort";
@@ -162,8 +178,8 @@ public partial class MainViewModel : ObservableObject
         TimeInputs.Clear();
         if (SelectedProcedure == null) return;
 
-        var labels = _config.TimeFieldLabels;
-        foreach (var key in SelectedProcedure.RequiredTimeFields)
+        var labels = _config.TimeFieldLabels ?? new Dictionary<string, string>();
+        foreach (var key in SelectedProcedure.RequiredTimeFields ?? new List<string>())
         {
             labels.TryGetValue(key, out var label);
             TimeInputs.Add(new TimeInputItem
