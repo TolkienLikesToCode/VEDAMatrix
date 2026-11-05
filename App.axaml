@@ -65,16 +65,32 @@
       <Setter Property="Padding" Value="12"/>
     </Style>
 
+    <!-- List selection: light grey, dark text -->
+    <Style Selector="ListBoxItem">
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="Foreground" Value="#111111"/>
+      <Setter Property="Padding" Value="4,2"/>
+    </Style>
     <Style Selector="ListBoxItem:pointerover /template/ ContentPresenter">
-      <Setter Property="Background" Value="#EEEEEE"/>
+      <Setter Property="Background" Value="#F0F0F0"/>
+      <Setter Property="Foreground" Value="#111111"/>
     </Style>
     <Style Selector="ListBoxItem:selected /template/ ContentPresenter">
-      <Setter Property="Background" Value="#111111"/>
-      <Setter Property="Foreground" Value="#FFFFFF"/>
+      <Setter Property="Background" Value="#E4E4E4"/>
+      <Setter Property="Foreground" Value="#111111"/>
     </Style>
     <Style Selector="ListBoxItem:selected:pointerover /template/ ContentPresenter">
-      <Setter Property="Background" Value="#333333"/>
-      <Setter Property="Foreground" Value="#FFFFFF"/>
+      <Setter Property="Background" Value="#D8D8D8"/>
+      <Setter Property="Foreground" Value="#111111"/>
+    </Style>
+    <Style Selector="ListBoxItem:selected TextBlock">
+      <Setter Property="Foreground" Value="#111111"/>
+    </Style>
+    <Style Selector="ListBoxItem:pointerover TextBlock">
+      <Setter Property="Foreground" Value="#111111"/>
+    </Style>
+    <Style Selector="ListBoxItem:selected:pointerover TextBlock">
+      <Setter Property="Foreground" Value="#111111"/>
     </Style>
   </Application.Styles>
 </Application>
