@@ -1,5 +1,4 @@
 using System.Collections.ObjectModel;
-using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using VedaMatrix.Models;
@@ -13,19 +12,33 @@ public partial class MainViewModel : ObservableObject
     private readonly MatrixEngine _engine;
     private readonly ProcedureConfig _config;
 
-    public ObservableCollection<string> OrtBeginnOptions { get; } = new() { "Dienststätte", "Wohnort", "Einsatzort", "Fortbildungsort" };
-    public ObservableCollection<string> PauseOptions { get; } = new() { "Ja", "Nein" };
-    public ObservableCollection<string> DienstgangOptions { get; } = new() { "Ja", "Nein" };
-    public ObservableCollection<string> DienstgangOrtOptions { get; } = new() { "Gleicher Ort", "Anderer Ort" };
-    public ObservableCollection<string> DienstgangEndeTypOptions { get; } = new() { "Rückkehr", "Außerhalb" };
-    public ObservableCollection<string> OrtEndeOptions { get; } = new() { "Dienststätte", "Wohnort" };
-    public ObservableCollection<string> MitarbeiterTypOptions { get; } = new() { "Angestellte", "Beamte" };
-    public ObservableCollection<string> ZusatzMobilOptions { get; } = new() { "Nein", "Ja" };
-    public ObservableCollection<string> DienstreiseOptions { get; } = new() { "Nein", "Ja" };
+    // Full option lists (never mutate these – used as source for filtering)
+    private static readonly string[] AllOrtBeginn = { "Dienststätte", "Wohnort", "Einsatzort", "Fortbildungsort" };
+    private static readonly string[] AllPause = { "Ja", "Nein" };
+    private static readonly string[] AllDienstgang = { "Ja", "Nein" };
+    private static readonly string[] AllDienstgangOrt = { "Gleicher Ort", "Anderer Ort" };
+    private static readonly string[] AllDienstgangEndeTyp = { "Rückkehr", "Außerhalb" };
+    private static readonly string[] AllOrtEnde = { "Dienststätte", "Wohnort" };
+    private static readonly string[] AllMitarbeiterTyp = { "Angestellte", "Beamte" };
+    private static readonly string[] AllZusatzMobil = { "Nein", "Ja" };
+    private static readonly string[] AllDienstreise = { "Nein", "Ja" };
+
+    // Filtered, bound collections
+    public ObservableCollection<string> OrtBeginnOptions { get; } = new(AllOrtBeginn);
+    public ObservableCollection<string> PauseOptions { get; } = new(AllPause);
+    public ObservableCollection<string> DienstgangOptions { get; } = new(AllDienstgang);
+    public ObservableCollection<string> DienstgangOrtOptions { get; } = new(AllDienstgangOrt);
+    public ObservableCollection<string> DienstgangEndeTypOptions { get; } = new(AllDienstgangEndeTyp);
+    public ObservableCollection<string> OrtEndeOptions { get; } = new(AllOrtEnde);
+    public ObservableCollection<string> MitarbeiterTypOptions { get; } = new(AllMitarbeiterTyp);
+    public ObservableCollection<string> ZusatzMobilOptions { get; } = new(AllZusatzMobil);
+    public ObservableCollection<string> DienstreiseOptions { get; } = new(AllDienstreise);
 
     public ObservableCollection<TimeInputItem> TimeInputs { get; } = new();
     public ObservableCollection<BookingResultItem> BookingResults { get; } = new();
     public ObservableCollection<Procedure> MatchingProcedures { get; } = new();
+
+    private bool _suppressFilter;
 
     public MainViewModel()
     {
@@ -50,6 +63,8 @@ public partial class MainViewModel : ObservableObject
 
         SollzeitText = "07:48";
 
+        // Initial selection without cascading side-effects
+        _suppressFilter = true;
         SelectedOrtBeginn = "Dienststätte";
         SelectedPause = "Ja";
         SelectedDienstgang = "Nein";
@@ -59,9 +74,9 @@ public partial class MainViewModel : ObservableObject
         SelectedMitarbeiterTyp = "Angestellte";
         SelectedZusatzMobil = "Nein";
         SelectedDienstreise = "Nein";
+        _suppressFilter = false;
 
-        UpdateVisibility();
-        UpdateMatches();
+        RefreshFiltersAndMatches();
     }
 
     // Selections
@@ -96,24 +111,38 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty] private string summaryWarning = "";
     [ObservableProperty] private bool showSummaryWarning;
 
+    // ── Change handlers ──────────────────────────────────────────────
+
     partial void OnSelectedOrtBeginnChanged(string? value)
     {
+        if (_suppressFilter) return;
+        // Auto-adjust OrtEnde default based on begin location
+        _suppressFilter = true;
         if (value == "Wohnort" || value == "Fortbildungsort")
             SelectedOrtEnde = "Wohnort";
         else if (value == "Dienststätte" || value == "Einsatzort")
             SelectedOrtEnde = "Dienststätte";
-        UpdateVisibility();
-        UpdateMatches();
+        _suppressFilter = false;
+        RefreshFiltersAndMatches();
     }
 
-    partial void OnSelectedPauseChanged(string? value) { UpdateVisibility(); UpdateMatches(); }
-    partial void OnSelectedDienstgangChanged(string? value) { UpdateVisibility(); UpdateMatches(); }
-    partial void OnSelectedDienstgangOrtChanged(string? value) { UpdateMatches(); }
-    partial void OnSelectedDienstgangEndeTypChanged(string? value) { UpdateMatches(); }
-    partial void OnSelectedOrtEndeChanged(string? value) { UpdateMatches(); }
-    partial void OnSelectedMitarbeiterTypChanged(string? value) { UpdateMatches(); }
-    partial void OnSelectedZusatzMobilChanged(string? value) { UpdateMatches(); }
-    partial void OnSelectedDienstreiseChanged(string? value) { UpdateMatches(); }
+    partial void OnSelectedPauseChanged(string? value) { if (!_suppressFilter) RefreshFiltersAndMatches(); }
+    partial void OnSelectedDienstgangChanged(string? value) { if (!_suppressFilter) RefreshFiltersAndMatches(); }
+    partial void OnSelectedDienstgangOrtChanged(string? value) { if (!_suppressFilter) RefreshFiltersAndMatches(); }
+    partial void OnSelectedDienstgangEndeTypChanged(string? value) { if (!_suppressFilter) RefreshFiltersAndMatches(); }
+    partial void OnSelectedOrtEndeChanged(string? value) { if (!_suppressFilter) RefreshFiltersAndMatches(); }
+    partial void OnSelectedMitarbeiterTypChanged(string? value) { if (!_suppressFilter) RefreshFiltersAndMatches(); }
+    partial void OnSelectedZusatzMobilChanged(string? value) { if (!_suppressFilter) RefreshFiltersAndMatches(); }
+    partial void OnSelectedDienstreiseChanged(string? value) { if (!_suppressFilter) RefreshFiltersAndMatches(); }
+
+    // ── Core filter + match logic ────────────────────────────────────
+
+    private void RefreshFiltersAndMatches()
+    {
+        UpdateVisibility();
+        ApplyOptionFilters();
+        UpdateMatches();
+    }
 
     private void UpdateVisibility()
     {
@@ -126,24 +155,144 @@ public partial class MainViewModel : ObservableObject
         ShowFortbildungHint = SelectedOrtBeginn == "Fortbildungsort";
     }
 
+    /// <summary>
+    /// Rebuild every dropdown so only values that can still reach a procedure remain.
+    /// If exactly one value is left, select it automatically.
+    /// </summary>
+    private void ApplyOptionFilters()
+    {
+        _suppressFilter = true;
+        try
+        {
+            // Build selection WITHOUT the dimension being filtered
+            FilterDimension("OrtBeginn", AllOrtBeginn, OrtBeginnOptions,
+                () => SelectedOrtBeginn, v => SelectedOrtBeginn = v);
+
+            FilterDimension("Pause", AllPause, PauseOptions,
+                () => SelectedPause, v => SelectedPause = v);
+
+            FilterDimension("Dienstgang", AllDienstgang, DienstgangOptions,
+                () => SelectedDienstgang, v => SelectedDienstgang = v);
+
+            if (ShowDienstgangDetails)
+            {
+                FilterDimension("DienstgangEndeTyp", AllDienstgangEndeTyp, DienstgangEndeTypOptions,
+                    () => SelectedDienstgangEndeTyp, v => SelectedDienstgangEndeTyp = v);
+            }
+
+            if (ShowDienstgangOrt)
+            {
+                FilterDimension("DienstgangOrt", AllDienstgangOrt, DienstgangOrtOptions,
+                    () => SelectedDienstgangOrt, v => SelectedDienstgangOrt = v);
+            }
+
+            FilterDimension("OrtEnde", AllOrtEnde, OrtEndeOptions,
+                () => SelectedOrtEnde, v => SelectedOrtEnde = v);
+
+            if (ShowMitarbeiterTyp)
+            {
+                FilterDimension("MitarbeiterTyp", AllMitarbeiterTyp, MitarbeiterTypOptions,
+                    () => SelectedMitarbeiterTyp, v => SelectedMitarbeiterTyp = v);
+            }
+
+            if (ShowZusatzMobil)
+            {
+                FilterDimension("ZusatzMobil", AllZusatzMobil, ZusatzMobilOptions,
+                    () => SelectedZusatzMobil, v => SelectedZusatzMobil = v);
+            }
+
+            if (ShowDienstreise)
+            {
+                FilterDimension("Dienstreise", AllDienstreise, DienstreiseOptions,
+                    () => SelectedDienstreise, v => SelectedDienstreise = v);
+            }
+        }
+        finally
+        {
+            _suppressFilter = false;
+        }
+    }
+
+    private void FilterDimension(
+        string dimension,
+        string[] allPossible,
+        ObservableCollection<string> target,
+        Func<string?> getCurrent,
+        Action<string> setCurrent)
+    {
+        // Selections excluding this dimension
+        var baseSel = BuildSelectionsExcluding(dimension);
+        var valid = _engine.GetValidValues(dimension, baseSel, allPossible);
+
+        // Update collection in-place to keep UI responsive
+        for (int i = target.Count - 1; i >= 0; i--)
+        {
+            if (!valid.Contains(target[i]))
+                target.RemoveAt(i);
+        }
+        foreach (var v in valid)
+        {
+            if (!target.Contains(v))
+                target.Add(v);
+        }
+
+        // Preserve order of allPossible
+        var ordered = allPossible.Where(v => valid.Contains(v)).ToList();
+        if (!target.SequenceEqual(ordered))
+        {
+            target.Clear();
+            foreach (var v in ordered)
+                target.Add(v);
+        }
+
+        var current = getCurrent();
+        if (valid.Count == 1)
+        {
+            // Only one path left → auto-select
+            if (current != valid[0])
+                setCurrent(valid[0]);
+        }
+        else if (current != null && !valid.Contains(current) && valid.Count > 0)
+        {
+            // Current selection became invalid → pick first remaining
+            setCurrent(valid[0]);
+        }
+    }
+
     private Dictionary<string, string> BuildSelections()
     {
+        return BuildSelectionsExcluding(null);
+    }
+
+    private Dictionary<string, string> BuildSelectionsExcluding(string? excludeDimension)
+    {
         var s = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-        if (!string.IsNullOrEmpty(SelectedOrtBeginn)) s["OrtBeginn"] = SelectedOrtBeginn;
-        if (!string.IsNullOrEmpty(SelectedPause)) s["Pause"] = SelectedPause;
-        if (!string.IsNullOrEmpty(SelectedDienstgang)) s["Dienstgang"] = SelectedDienstgang;
-        if (ShowDienstgangDetails && !string.IsNullOrEmpty(SelectedDienstgangEndeTyp))
-            s["DienstgangEndeTyp"] = SelectedDienstgangEndeTyp;
-        if (ShowDienstgangOrt && !string.IsNullOrEmpty(SelectedDienstgangOrt))
-            s["DienstgangOrt"] = SelectedDienstgangOrt;
-        if (!string.IsNullOrEmpty(SelectedOrtEnde))
-            s["OrtEnde"] = SelectedOrtEnde;
-        if (ShowMitarbeiterTyp && !string.IsNullOrEmpty(SelectedMitarbeiterTyp))
-            s["MitarbeiterTyp"] = SelectedMitarbeiterTyp;
-        if (ShowZusatzMobil && !string.IsNullOrEmpty(SelectedZusatzMobil))
-            s["ZusatzMobil"] = SelectedZusatzMobil;
-        if (ShowDienstreise && !string.IsNullOrEmpty(SelectedDienstreise))
-            s["Dienstreise"] = SelectedDienstreise;
+
+        void Add(string key, string? value)
+        {
+            if (excludeDimension != null && key == excludeDimension) return;
+            if (!string.IsNullOrEmpty(value))
+                s[key] = value;
+        }
+
+        Add("OrtBeginn", SelectedOrtBeginn);
+        Add("Pause", SelectedPause);
+        Add("Dienstgang", SelectedDienstgang);
+
+        if (ShowDienstgangDetails)
+            Add("DienstgangEndeTyp", SelectedDienstgangEndeTyp);
+        if (ShowDienstgangOrt)
+            Add("DienstgangOrt", SelectedDienstgangOrt);
+
+        Add("OrtEnde", SelectedOrtEnde);
+
+        if (ShowMitarbeiterTyp)
+            Add("MitarbeiterTyp", SelectedMitarbeiterTyp);
+        if (ShowZusatzMobil)
+            Add("ZusatzMobil", SelectedZusatzMobil);
+        if (ShowDienstreise)
+            Add("Dienstreise", SelectedDienstreise);
+
         return s;
     }
 
@@ -236,7 +385,6 @@ public partial class MainViewModel : ObservableObject
             });
         }
 
-        // Summary
         var soll = ParseSollzeit();
         var summary = _engine.CalculateWorkTime(bookings, soll);
 
@@ -258,6 +406,7 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand]
     private void Reset()
     {
+        _suppressFilter = true;
         SelectedOrtBeginn = "Dienststätte";
         SelectedPause = "Ja";
         SelectedDienstgang = "Nein";
@@ -268,13 +417,37 @@ public partial class MainViewModel : ObservableObject
         SelectedZusatzMobil = "Nein";
         SelectedDienstreise = "Nein";
         SollzeitText = "07:48";
+        _suppressFilter = false;
+
         BookingResults.Clear();
         SummaryGearbeitet = "—";
         SummarySollzeit = "07:48";
         SummaryDifferenz = "—";
         SummaryWarning = "";
         ShowSummaryWarning = false;
+
+        // Restore full option lists then re-filter
+        RestoreAllOptions();
+        RefreshFiltersAndMatches();
         StatusMessage = "Zurückgesetzt.";
+    }
+
+    private void RestoreAllOptions()
+    {
+        void Fill(ObservableCollection<string> col, string[] all)
+        {
+            col.Clear();
+            foreach (var v in all) col.Add(v);
+        }
+        Fill(OrtBeginnOptions, AllOrtBeginn);
+        Fill(PauseOptions, AllPause);
+        Fill(DienstgangOptions, AllDienstgang);
+        Fill(DienstgangOrtOptions, AllDienstgangOrt);
+        Fill(DienstgangEndeTypOptions, AllDienstgangEndeTyp);
+        Fill(OrtEndeOptions, AllOrtEnde);
+        Fill(MitarbeiterTypOptions, AllMitarbeiterTyp);
+        Fill(ZusatzMobilOptions, AllZusatzMobil);
+        Fill(DienstreiseOptions, AllDienstreise);
     }
 }
 

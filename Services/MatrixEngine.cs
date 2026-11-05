@@ -36,6 +36,45 @@ public class MatrixEngine
         return true;
     }
 
+    /// <summary>
+    /// Returns all values for <paramref name="dimension"/> that still leave
+    /// at least one matching procedure when combined with the other current selections.
+    /// </summary>
+    public List<string> GetValidValues(string dimension, Dictionary<string, string> currentSelections, IEnumerable<string> allPossible)
+    {
+        var valid = new List<string>();
+        foreach (var candidate in allPossible)
+        {
+            var test = new Dictionary<string, string>(currentSelections, StringComparer.OrdinalIgnoreCase)
+            {
+                [dimension] = candidate
+            };
+
+            // A value is valid if ANY procedure is still compatible
+            // (procedure conditions that are present in test must match;
+            //  missing keys in the procedure are fine – partial match)
+            if (_procedures.Any(p => IsCompatible(p, test)))
+                valid.Add(candidate);
+        }
+        return valid;
+    }
+
+    /// <summary>
+    /// Soft match: every key that exists in BOTH the procedure conditions AND the selections must agree.
+    /// Keys only in the procedure (not yet selected) are ignored.
+    /// </summary>
+    private static bool IsCompatible(Procedure procedure, Dictionary<string, string> selections)
+    {
+        foreach (var (key, expected) in procedure.Conditions)
+        {
+            if (!selections.TryGetValue(key, out var actual))
+                continue; // not yet chosen – still possible
+            if (!string.Equals(actual, expected, StringComparison.OrdinalIgnoreCase))
+                return false;
+        }
+        return true;
+    }
+
     public List<(string Action, string Time, string? Comment)> GenerateBookings(
         Procedure procedure,
         Dictionary<string, string> times)
@@ -61,18 +100,10 @@ public class MatrixEngine
             result.Add((step.Action, timeValue, step.Comment));
         }
 
-        // Apply +1 minute collision resolution
         ApplyMinuteCollisions(result);
-
         return result;
     }
 
-    /// <summary>
-    /// If two consecutive bookings share the same timestamp, the later one
-    /// (and any subsequent ones that collide) are shifted by +1 minute.
-    /// Typical cases: Kommen → Dienstgang Beginn at same clock time,
-    /// or return + immediate leave.
-    /// </summary>
     private static void ApplyMinuteCollisions(List<(string Action, string Time, string? Comment)> bookings)
     {
         TimeSpan? lastTime = null;
@@ -89,7 +120,6 @@ public class MatrixEngine
 
             if (lastTime.HasValue && current <= lastTime.Value)
             {
-                // Shift this and all following identical/earlier times by +1 min from previous
                 current = lastTime.Value.Add(TimeSpan.FromMinutes(1));
                 var adjusted = FormatTime(current);
                 var note = string.IsNullOrEmpty(comment)
@@ -109,7 +139,6 @@ public class MatrixEngine
 
         text = text.Trim().Replace('.', ':');
 
-        // Accept H:mm, HH:mm, H:mm:ss
         if (TimeSpan.TryParseExact(text, new[] { @"h\:mm", @"hh\:mm", @"h\:mm\:ss", @"hh\:mm\:ss" },
                 CultureInfo.InvariantCulture, out time))
             return true;
@@ -123,11 +152,6 @@ public class MatrixEngine
     public static string FormatTime(TimeSpan t)
         => $"{(int)t.TotalHours:D2}:{t.Minutes:D2}";
 
-    /// <summary>
-    /// Calculates worked time from a sequence of bookings.
-    /// Simple model: pairs of "start-like" → "end-like" actions accumulate duration.
-    /// Pause (Gehen → Kommen or Mob.Ende → Mob.Beginn around midday) is excluded.
-    /// </summary>
     public WorkTimeSummary CalculateWorkTime(
         List<(string Action, string Time, string? Comment)> bookings,
         TimeSpan sollzeit)
@@ -156,7 +180,6 @@ public class MatrixEngine
             }
         }
 
-        // Sum
         var total = TimeSpan.Zero;
         foreach (var (s, e) in intervals)
             total += e - s;
