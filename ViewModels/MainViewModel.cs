@@ -12,6 +12,21 @@ public partial class MainViewModel : ObservableObject
     private readonly MatrixEngine _engine;
     private readonly ProcedureConfig _config;
 
+    // Collections must be created BEFORE any property setters that call UpdateMatches()
+    public ObservableCollection<string> OrtBeginnOptions { get; } = new() { "Dienststätte", "Wohnort", "Einsatzort", "Fortbildungsort" };
+    public ObservableCollection<string> PauseOptions { get; } = new() { "Ja", "Nein" };
+    public ObservableCollection<string> DienstgangOptions { get; } = new() { "Ja", "Nein" };
+    public ObservableCollection<string> DienstgangOrtOptions { get; } = new() { "Gleicher Ort", "Anderer Ort" };
+    public ObservableCollection<string> DienstgangEndeTypOptions { get; } = new() { "Rückkehr", "Außerhalb" };
+    public ObservableCollection<string> OrtEndeOptions { get; } = new() { "Dienststätte", "Wohnort" };
+    public ObservableCollection<string> MitarbeiterTypOptions { get; } = new() { "Angestellte", "Beamte" };
+    public ObservableCollection<string> ZusatzMobilOptions { get; } = new() { "Nein", "Ja" };
+    public ObservableCollection<string> DienstreiseOptions { get; } = new() { "Nein", "Ja" };
+
+    public ObservableCollection<TimeInputItem> TimeInputs { get; } = new();
+    public ObservableCollection<BookingResultItem> BookingResults { get; } = new();
+    public ObservableCollection<Procedure> MatchingProcedures { get; } = new();
+
     public MainViewModel()
     {
         try
@@ -19,7 +34,6 @@ public partial class MainViewModel : ObservableObject
             _configService = new ConfigService();
             _config = _configService.Load();
             _engine = new MatrixEngine(_config.Procedures ?? new List<Procedure>());
-
             Console.WriteLine($"[VM] {_config.Procedures?.Count ?? 0} Prozeduren geladen.");
         }
         catch (Exception ex)
@@ -34,18 +48,7 @@ public partial class MainViewModel : ObservableObject
             _engine = new MatrixEngine(Array.Empty<Procedure>());
         }
 
-        // Dropdown options
-        OrtBeginnOptions = new ObservableCollection<string> { "Dienststätte", "Wohnort", "Einsatzort", "Fortbildungsort" };
-        PauseOptions = new ObservableCollection<string> { "Ja", "Nein" };
-        DienstgangOptions = new ObservableCollection<string> { "Ja", "Nein" };
-        DienstgangOrtOptions = new ObservableCollection<string> { "Gleicher Ort", "Anderer Ort" };
-        DienstgangEndeTypOptions = new ObservableCollection<string> { "Rückkehr", "Außerhalb" };
-        OrtEndeOptions = new ObservableCollection<string> { "Dienststätte", "Wohnort" };
-        MitarbeiterTypOptions = new ObservableCollection<string> { "Angestellte", "Beamte" };
-        ZusatzMobilOptions = new ObservableCollection<string> { "Nein", "Ja" };
-        DienstreiseOptions = new ObservableCollection<string> { "Nein", "Ja" };
-
-        // Defaults
+        // Defaults – collections already exist, so UpdateMatches is safe
         SelectedOrtBeginn = "Dienststätte";
         SelectedPause = "Ja";
         SelectedDienstgang = "Nein";
@@ -55,10 +58,6 @@ public partial class MainViewModel : ObservableObject
         SelectedMitarbeiterTyp = "Angestellte";
         SelectedZusatzMobil = "Nein";
         SelectedDienstreise = "Nein";
-
-        TimeInputs = new ObservableCollection<TimeInputItem>();
-        BookingResults = new ObservableCollection<BookingResultItem>();
-        MatchingProcedures = new ObservableCollection<Procedure>();
 
         UpdateVisibility();
         UpdateMatches();
@@ -84,24 +83,6 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty] private bool showDienstreise;
     [ObservableProperty] private bool showFortbildungHint;
 
-    // Options
-    public ObservableCollection<string> OrtBeginnOptions { get; }
-    public ObservableCollection<string> PauseOptions { get; }
-    public ObservableCollection<string> DienstgangOptions { get; }
-    public ObservableCollection<string> DienstgangOrtOptions { get; }
-    public ObservableCollection<string> DienstgangEndeTypOptions { get; }
-    public ObservableCollection<string> OrtEndeOptions { get; }
-    public ObservableCollection<string> MitarbeiterTypOptions { get; }
-    public ObservableCollection<string> ZusatzMobilOptions { get; }
-    public ObservableCollection<string> DienstreiseOptions { get; }
-
-    // Dynamic time inputs
-    public ObservableCollection<TimeInputItem> TimeInputs { get; }
-
-    // Results
-    public ObservableCollection<BookingResultItem> BookingResults { get; }
-    public ObservableCollection<Procedure> MatchingProcedures { get; }
-
     [ObservableProperty] private Procedure? selectedProcedure;
     [ObservableProperty] private string? attentionNote;
     [ObservableProperty] private string statusMessage = "Bitte Auswahl treffen und Zeiten eingeben.";
@@ -112,9 +93,11 @@ public partial class MainViewModel : ObservableObject
             SelectedOrtEnde = "Wohnort";
         else if (value == "Dienststätte" || value == "Einsatzort")
             SelectedOrtEnde = "Dienststätte";
+
         UpdateVisibility();
         UpdateMatches();
     }
+
     partial void OnSelectedPauseChanged(string? value) { UpdateVisibility(); UpdateMatches(); }
     partial void OnSelectedDienstgangChanged(string? value) { UpdateVisibility(); UpdateMatches(); }
     partial void OnSelectedDienstgangOrtChanged(string? value) { UpdateMatches(); }
@@ -158,6 +141,9 @@ public partial class MainViewModel : ObservableObject
 
     private void UpdateMatches()
     {
+        // Guard – should never be null now, but keep safe
+        if (MatchingProcedures is null || _engine is null) return;
+
         var selections = BuildSelections();
         MatchingProcedures.Clear();
         foreach (var p in _engine.FindMatching(selections))
@@ -175,6 +161,7 @@ public partial class MainViewModel : ObservableObject
 
     private void UpdateTimeFields()
     {
+        if (TimeInputs is null) return;
         TimeInputs.Clear();
         if (SelectedProcedure == null) return;
 
