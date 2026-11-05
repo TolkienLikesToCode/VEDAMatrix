@@ -176,7 +176,7 @@
         <Button Content="Zurücksetzen" Command="{Binding ResetCommand}" Classes="secondary"/>
         <Button Content="Buchungen generieren" Command="{Binding GenerateCommand}"/>
       </StackPanel>
-      <TextBlock Text="VEDA Matrix v0.0.1  ·  eGovernment  ·  © 2026 Lenny Kunz"
+      <TextBlock Text="VEDA Matrix v1.0.0  ·  eGovernment  ·  © 2026 eGovernment"
                  Foreground="#888888"
                  FontSize="11"
                  VerticalAlignment="Center"/>

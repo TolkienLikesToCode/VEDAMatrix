@@ -244,24 +244,81 @@ public partial class MainViewModel : ObservableObject
         if (SelectedProcedure == null) return;
 
         var labels = _config.TimeFieldLabels ?? new Dictionary<string, string>();
+        var defaults = BuildDefaultTimes(SelectedProcedure);
+
         foreach (var key in SelectedProcedure.RequiredTimeFields ?? new List<string>())
         {
             labels.TryGetValue(key, out var label);
+            defaults.TryGetValue(key, out var value);
             TimeInputs.Add(new TimeInputItem
             {
                 Key = key,
                 Label = label ?? key,
-                Value = GetDefaultTime(key)
+                Value = value ?? GetStaticDefault(key)
             });
         }
     }
 
-    private static string GetDefaultTime(string key) => key switch
+    /// <summary>
+    /// Builds default times from procedure steps.
+    /// Actions that immediately follow another booking (e.g. Dienstgang Start after Kommen)
+    /// default to previous time + 1 minute, matching real booking practice.
+    /// Static example times are used for pauses and planned end times.
+    /// </summary>
+    private static Dictionary<string, string> BuildDefaultTimes(Procedure procedure)
+    {
+        var result = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        TimeSpan? lastAssigned = null;
+
+        // Keys that should snap to previous+1min when they appear right after a start/kommen
+        // in the step sequence (not independent planned times like PauseBeginn).
+        var followOnKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "DienstgangStart"
+        };
+
+        foreach (var step in procedure.Steps ?? new List<BookingStep>())
+        {
+            var key = step.TimeKey;
+            if (string.IsNullOrEmpty(key)) continue;
+            if (result.ContainsKey(key)) continue; // first occurrence wins for shared keys
+
+            string value;
+            if (followOnKeys.Contains(key) && lastAssigned.HasValue)
+            {
+                var next = lastAssigned.Value.Add(TimeSpan.FromMinutes(1));
+                value = FormatTs(next);
+            }
+            else
+            {
+                value = GetStaticDefault(key);
+            }
+
+            result[key] = value;
+            if (MatrixEngine.TryParseTime(value, out var ts))
+                lastAssigned = ts;
+        }
+
+        // Ensure all required fields still get a value
+        foreach (var key in procedure.RequiredTimeFields ?? new List<string>())
+        {
+            if (!result.ContainsKey(key))
+                result[key] = GetStaticDefault(key);
+        }
+
+        return result;
+    }
+
+    private static string FormatTs(TimeSpan t)
+        => $"{(int)t.TotalHours:D2}:{t.Minutes:D2}";
+
+    private static string GetStaticDefault(string key) => key switch
     {
         "Arbeitsbeginn" => "07:00",
         "PauseBeginn" => "12:30",
         "PauseEnde" => "13:00",
-        "DienstgangStart" => "09:00",
+        // Fallback only if no previous step exists
+        "DienstgangStart" => "07:01",
         "DienstgangEnde" => "15:30",
         "Arbeitsende" => "16:00",
         "ArbeitsendeDienststaette" => "15:00",
