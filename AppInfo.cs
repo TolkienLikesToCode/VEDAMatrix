@@ -21,7 +21,7 @@ public static class AppInfo
 
     /// <summary>Short product description (German UI).</summary>
     public const string Description = "Buchungsvorgänge im Veda Horizon – Entscheidungsmatrix";
-
+yzzzy
     /// <summary>Copyright notice.</summary>
     public const string Copyright = "© 2026 eGovernment";
 
